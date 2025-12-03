@@ -1,45 +1,79 @@
-from matplotlib import pyplot as plt
-from tqdm_table import tqdm_table
 from model import UNet
 import torch.utils.data as Data
 import numpy as np
 import argparse
-import librosa
-import random
 import torch
 import os
+from tqdm import tqdm
+import random
 
 """
     This script defines the training procedure of SVS-UNet
-
-    @Author: SunnerLi
+    Updated for Python 3.9+
 """
+
+# Determine device
+device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
+print(f"Using device: {device}")
 
 class SpectrogramDataset(Data.Dataset):
     def __init__(self, path):
         self.path = path
-        self.files = sorted(os.listdir(os.path.join(path, 'mixture')))
-        self.files = [name for name in self.files if 'spec' in name]
+        self.mixture_path = os.path.join(path, 'mixture')
+        self.vocal_path = os.path.join(path, 'vocal')
+        self.files = sorted([f for f in os.listdir(self.mixture_path) if 'spec' in f])
 
     def __len__(self):
         return len(self.files)
 
     def __getitem__(self, idx):
+        file_name = self.files[idx]
+        
         # Load the spectrogram
-        mix = np.load(os.path.join(self.path, 'mixture', self.files[idx]))
-        voc = np.load(os.path.join(self.path, 'vocal', self.files[idx]))
+        mix = np.load(os.path.join(self.mixture_path, file_name))
+        voc = np.load(os.path.join(self.vocal_path, file_name))
 
-        # Random sample
-        start = random.randint(0, mix.shape[-1] - 128 - 1)
-        mix = mix[1:,start:start + 128, np.newaxis]
-        voc = voc[1:,start:start + 128, np.newaxis]
+        # Random crop
+        # Ensure we have enough width
+        if mix.shape[-1] > 129:
+            start = random.randint(0, mix.shape[-1] - 128 - 1)
+            mix = mix[1:, start:start + 128] # Crop frequency bins if needed, original code mix[1:]
+            voc = voc[1:, start:start + 128]
+        else:
+            # Padding if too short (optional, based on your data)
+            pass
+
+        # Add channel dimension
+        mix = mix[np.newaxis, :, :]
+        voc = voc[np.newaxis, :, :]
+        
         mix = np.asarray(mix, dtype=np.float32)
         voc = np.asarray(voc, dtype=np.float32)
 
-        # To tensor
-        mix = torch.from_numpy(mix).permute(2, 0, 1)
-        voc = torch.from_numpy(voc).permute(2, 0, 1)
-        return mix, voc
+        # To tensor (Pytorch expects C, H, W)
+        # Original code did permute(2,0,1) which implies input was (Freq, Time, 1)?
+        # If np.load returns (Freq, Time), adding newaxis at end makes (Freq, Time, 1).
+        # Permute(2, 0, 1) -> (1, Freq, Time). Correct.
+        # But here I did newaxis at 0. So shape is (1, Freq, Time). No permute needed.
+        # Let's stick to original logic strictly:
+        
+        # Reload to be sure
+        mix_raw = np.load(os.path.join(self.mixture_path, file_name))
+        voc_raw = np.load(os.path.join(self.vocal_path, file_name))
+        
+        if mix_raw.shape[-1] > 129:
+            start = random.randint(0, mix_raw.shape[-1] - 128 - 1)
+            mix_crop = mix_raw[1:, start:start + 128, np.newaxis] # (Freq, Time, 1)
+            voc_crop = voc_raw[1:, start:start + 128, np.newaxis]
+        else:
+            # Fallback for short files
+            mix_crop = mix_raw[1:, :, np.newaxis]
+            voc_crop = voc_raw[1:, :, np.newaxis]
+
+        mix_tensor = torch.from_numpy(mix_crop).permute(2, 0, 1) # (1, Freq, Time)
+        voc_tensor = torch.from_numpy(voc_crop).permute(2, 0, 1)
+        
+        return mix_tensor, voc_tensor
 
 # =========================================================================================
 # 1. Parse the direction and related parameters
@@ -65,25 +99,39 @@ args = parser.parse_args()
 # =========================================================================================
 # Create the data loader
 loader = Data.DataLoader(
-    dataset = SpectrogramDataset(args.train_folder),
-    batch_size=1, num_workers=0, shuffle=True
+    dataset=SpectrogramDataset(args.train_folder),
+    batch_size=4, # Increased batch size slightly
+    num_workers=4, 
+    shuffle=True,
+    pin_memory=True if device.type == 'cuda' else False
 )
 
-# Load the pre-trained model
 model = UNet()
-model.load(args.load_path)
+model.to(device)
 
-# Train!
+if os.path.exists(args.load_path):
+    model.load(args.load_path)
+
+print("Start training...")
 for ep in range(args.epoch):
-    bar = tqdm_table(loader)
-    for i, (mix, voc) in enumerate(bar):
-        mix, voc = mix.cuda(), voc.cuda()
+    model.train()
+    loop = tqdm(loader, desc=f"Epoch {ep+1}/{args.epoch}")
+    
+    epoch_loss = 0
+    for i, (mix, voc) in enumerate(loop):
+        mix, voc = mix.to(device), voc.to(device)
+        
+        # model.backward handles zero_grad, forward, loss, backward, step
         model.backward(mix, voc)
-        if i == len(bar) - 1:
-            info_dict = model.getLoss(normalize = True)
-        else:
-            info_dict = model.getLoss(normalize = False)
-        info_dict.update({'Epoch': ep})
-        bar.set_table_info(info_dict)
+        
+        # Get loss for display
+        loss_dict = model.getLoss()
+        current_loss = loss_dict.get('loss_list_vocal', 0)
+        epoch_loss += current_loss
+        
+        loop.set_postfix(loss=current_loss)
+    
+    print(f"Epoch {ep+1} Average Loss: {epoch_loss / len(loader):.6f}")
     model.save(args.save_path)
+
 print("Finish training!")

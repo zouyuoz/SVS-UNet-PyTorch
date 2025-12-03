@@ -1,0 +1,18 @@
+# PyTorch (建議使用 2.0 以上版本以獲得最佳效能)
+# 如果您是 Mac (M1/M2) 或 Linux CUDA 用戶，pip 通常會自動抓取對應版本
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+
+# 關鍵：必須鎖定 numpy 在 2.0 以下，否則 librosa 和 numba 可能會崩潰
+numpy<2.0.0
+
+# 音訊處理核心
+# librosa 0.10.x 改動了部分 API，我們的程式碼已針對此版本適配
+librosa==0.10.1
+soundfile==0.12.1
+stempeg==0.2.3
+
+# 進度條與其他工具
+tqdm>=4.66.0
+argparse
