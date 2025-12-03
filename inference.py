@@ -24,72 +24,107 @@ def num2str(n):
         --tar               The folder where you want to save the splited magnitude in
     --------------------------------------------------------------------------------------------
 """
+# 1. 參數設定
 parser = argparse.ArgumentParser()
-parser.add_argument('--model_path', type=str, default='result.pth')
-parser.add_argument('--mixture_folder', type=str, default='inference/mixture')
-parser.add_argument('--tar', type=str, default='inference/split')
+parser.add_argument('--model_path', type=str, default='svs_unet.pth', help="訓練好的模型權重檔")
+parser.add_argument('--mixture_folder', type=str, required=True, help="包含 .npy 頻譜圖的資料夾 (例如 unet_spectrogram/test/mixture)")
+parser.add_argument('--tar', type=str, default='inference_result', help="輸出預測結果的資料夾")
 args = parser.parse_args()
 
 if not os.path.exists(args.tar):
     os.makedirs(args.tar, exist_ok=True)
 
+# 2. 準備模型與設備
 device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
+print(f"Inference using device: {device}")
 
 model = UNet()
 model.to(device)
-model.load(args.model_path)
+try:
+    model.load(args.model_path)
+    print(f"成功載入模型: {args.model_path}")
+except Exception as e:
+    print(f"載入模型失敗: {e}")
+    exit(1)
+
 model.eval()
 
-print(f"Inference using {device}...")
-
+# 3. 開始分離
 with torch.no_grad():
-    files = sorted([f for f in os.listdir(args.mixture_folder) if 'spec' in f])
+    # 掃描 mixture 資料夾中的 spec 檔案
+    files = sorted([f for f in os.listdir(args.mixture_folder) if f.endswith('_spec.npy')])
+    print(f"找到 {len(files)} 個檔案，開始處理...")
+
     bar = tqdm(files)
-    
-    for idx, name in enumerate(bar):
-        # Optional: limit number of files for testing
-        # if idx > 5: break
-        
+    for name in bar:
         filepath = os.path.join(args.mixture_folder, name)
-        mix = np.load(filepath)
+        mix = np.load(filepath) # Shape: (513, Time)
         
-        # Prepare to reconstruct
+        # 移除 DC component 以符合模型輸入 (513 -> 512)
+        mix_crop = mix[1:, :] 
+        
         spec_sum = None
         
-        # Sliding window inference
-        # Original logic assumes simple concatenation.
-        # We process in chunks of 128 time steps.
+        # 滑動視窗推論 (Sliding Window Inference)
+        # 每次切 128 的長度丟進去
+        seg_len = 128
+        num_segments = (mix_crop.shape[-1] // seg_len) + 1
         
-        num_segments = mix.shape[-1] // 128
-        
-        for i in range(num_segments):
-            # Get segment
-            seg = mix[1:, i * 128 : i * 128 + 128, np.newaxis] # (Freq, Time, 1)
-            seg_tensor = torch.from_numpy(seg).permute(2, 0, 1).unsqueeze(0) # (B, C, F, T) -> (1, 1, F, T)
-            seg_tensor = seg_tensor.to(device)
+        generated_spec = []
 
-            # Generate mask
+        for i in range(num_segments):
+            start = i * seg_len
+            end = start + seg_len
+            
+            # 取出片段
+            seg = mix_crop[:, start:end]
+            
+            # 如果是最後一段長度不夠，需要 Padding
+            current_seg_len = seg.shape[1]
+            if current_seg_len == 0: continue
+            
+            if current_seg_len < seg_len:
+                pad_width = seg_len - current_seg_len
+                seg_input = np.pad(seg, ((0, 0), (0, pad_width)), mode='constant')
+            else:
+                seg_input = seg
+
+            # 轉 Tensor (1, 1, 512, 128)
+            seg_tensor = torch.from_numpy(seg_input[np.newaxis, np.newaxis, :, :]).float().to(device)
+
+            # 生成 Mask
             msk = model(seg_tensor)
 
-            # Apply mask
-            # Vocal = Mix * (1 - Mask) based on original paper logic usually, 
-            # but check original code: vocal_ = seg * (1 - msk)
-            vocal_tensor = seg_tensor * (1 - msk)
-            
-            # Back to numpy
-            # (1, 1, F, T) -> (F, T)
-            vocal_np = vocal_tensor.squeeze().cpu().numpy()
-            
-            # Restore the first frequency bin if it was dropped (original code mix[1:])
-            # Original code: vocal_ = np.vstack((np.zeros((128)), vocal_)) -> This adds a row of zeros at freq 0
-            # Dimensions of vocal_np should be (512, 128)
-            # vstack along axis 0
-            vocal_np = np.vstack((np.zeros((1, 128), dtype=np.float32), vocal_np))
-            
-            spec_sum = vocal_np if spec_sum is None else np.concatenate((spec_sum, vocal_np), axis=1)
-            
-        if spec_sum is not None:
-            save_name = f"{num2str(idx)}_{name.replace('_spec.npy', '')}_vocal_spec"
-            np.save(os.path.join(args.tar, save_name), spec_sum)
+            # 應用 Mask (Vocal = Mix * Mask)
+            # 根據 train.py 的 loss 計算方式：loss = crit(msk * mix, voc)
+            # 所以這裡是直接相乘
+            pred_vocal_tensor = seg_tensor * msk
 
-print("Inference finished!")
+            # 轉回 Numpy
+            pred_vocal_np = pred_vocal_tensor.squeeze().cpu().numpy() # (512, 128)
+
+            # 如果原本有 Padding，要把多餘的部分切掉
+            if current_seg_len < seg_len:
+                pred_vocal_np = pred_vocal_np[:, :current_seg_len]
+
+            generated_spec.append(pred_vocal_np)
+
+        # 合併所有片段
+        if generated_spec:
+            vocal_full = np.concatenate(generated_spec, axis=1)
+            
+            # 把切掉的第 0 個頻率補回 0 (變成 513)
+            vocal_full = np.vstack((np.zeros((1, vocal_full.shape[1]), dtype=np.float32), vocal_full))
+            
+            # 存檔
+            save_name = name # 保持原檔名，方便 data.py 對應
+            np.save(os.path.join(args.tar, save_name), vocal_full)
+
+print("分離完成！")
+
+"""
+python data.py --direction to_wave --src unet_spectrograms/test/inference_output --phase unet_spectrograms/test/mixture --tar test_results_wav
+python data.py --src custom_song --tar custom_spec --direction to_spec
+python inference.py --model_path svs_1204.pth --mixture_folder custom_spec/mixture --tar custom_spec/vocal_pred
+python data.py --direction to_wave --src custom_spec/vocal_pred --phase custom_spec/mixture --tar my_result_song
+"""

@@ -2,3 +2,10 @@ unet_spectrograms/
 .venv/
 __pycache__/
 .python-version
+
+*.pt
+
+custom_song/
+custom_spec/
+my_result_song/
+test_result_wav/
