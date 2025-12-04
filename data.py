@@ -16,13 +16,13 @@ def num2str(n):
 # 1. 參數設定
 # =========================================================================================
 parser = argparse.ArgumentParser()
-parser.add_argument('--src', type=str, required=True, help="來源資料夾 (包含多個歌曲資料夾)")
-parser.add_argument('--tar', type=str, required=True, help="目標資料夾 (存放 Spectrogram)")
-parser.add_argument('--phase', type=str, default='-1', help="Phase 資料夾 (僅用於 to_wave)")
-parser.add_argument('--win_size', type=int, default=1024)
-parser.add_argument('--hop_size', type=int, default=768)
-parser.add_argument('--sr', type=int, default=44100)
-parser.add_argument('--direction', default="to_spec", choices=["to_spec", "to_wave"])
+parser.add_argument('--src',      type = str, required = True, help="來源資料夾 (包含多個歌曲資料夾)")
+parser.add_argument('--tar',      type = str, required = True, help="目標資料夾 (存放 Spectrogram)")
+parser.add_argument('--phase',    type = str, default = '-1',  help="Phase 資料夾 (僅用於 to_wave)")
+parser.add_argument('--win_size', type = int, default = 4096)
+parser.add_argument('--hop_size', type = int, default = 1024)
+parser.add_argument('--sr',       type = int, default = 44100)
+parser.add_argument('--direction',            default = "to_spec", choices = ["to_spec", "to_wave"])
 args = parser.parse_args()
 
 # =========================================================================================

@@ -92,9 +92,9 @@ parser.add_argument('--load_path'   , type = str, default = 'result.pth')
 parser.add_argument('--save_path'   , type = str, default = 'result.pth')
 parser.add_argument('--epoch'       , type = int, default = 2)
 
-parser.add_argument('--valid_folder', type=str, default='unet_spectrograms/valid', help="驗證集路徑")
-parser.add_argument('--batch_size', type=int, default=4)
-parser.add_argument('--val_interval', type=int, default=20, help="每幾輪做一次驗證")
+parser.add_argument('--valid_folder', type = str, default = 'unet_spectrograms/valid', help="驗證集路徑")
+parser.add_argument('--batch_size'  , type = int, default = 2)
+parser.add_argument('--val_interval', type = int, default = 20, help="每幾輪做一次驗證")
 
 args = parser.parse_args()
 # =========================================================================================
