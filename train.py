@@ -6,6 +6,7 @@ import torch
 import os
 from tqdm import tqdm
 import random
+from utils import INPUT_LEN # 512
 
 """
     SVS-UNet Training Script with Validation
@@ -20,55 +21,55 @@ print(f"Using device: {device}")
 # Dataset Definition
 # =========================================================================================
 class SpectrogramDataset(Data.Dataset):
-    def __init__(self, path):
-        """
-        path: 指向 unet_spectrogram/train 或 unet_spectrogram/valid
-        """
+    def __init__(self, path, samples_per_song=64): # <--- 新增參數，預設每首歌抽 50 次
         self.path = path
         self.mixture_path = os.path.join(path, 'mixture')
         self.vocal_path = os.path.join(path, 'vocal')
+        self.samples_per_song = samples_per_song
 
         if not os.path.exists(self.mixture_path):
             raise FileNotFoundError(f"找不到 Mixture 資料夾: {self.mixture_path}")
-        if not os.path.exists(self.vocal_path):
-            raise FileNotFoundError(f"找不到 Vocals 資料夾: {self.vocal_path}")
 
-        # 讀取檔名
-        mix_files = sorted([f for f in os.listdir(self.mixture_path) if f.endswith('_spec.npy')])
+        # 讀取所有檔名
+        self.file_names = sorted([f for f in os.listdir(self.mixture_path) if f.endswith('_spec.npy')])
         
-        # 雙重確認對應檔案存在
-        self.files = [f for f in mix_files if os.path.exists(os.path.join(self.vocal_path, f))]
+        # 確保對應檔案存在
+        self.file_names = [f for f in self.file_names if os.path.exists(os.path.join(self.vocal_path, f))]
         
-        print(f"[{os.path.basename(path)}] 載入 {len(self.files)} 筆資料")
+        print(f"[{os.path.basename(path)}] 載入 {len(self.file_names)} 首歌曲，每輪採樣 {self.samples_per_song} 次，共 {len(self)} 筆資料。")
 
     def __len__(self):
-        return len(self.files)
+        # 讓 Dataset 的長度變長 (歌曲數 * 每首歌採樣次數)
+        return len(self.file_names) * self.samples_per_song
 
     def __getitem__(self, idx):
-        file_name = self.files[idx]
+        # 透過取餘數來決定現在要讀哪首歌
+        file_name = self.file_names[idx % len(self.file_names)]
         
-        # 1. Load (Freq=513, Time=T)
+        # 1. 讀取 .npy
         mix = np.load(os.path.join(self.mixture_path, file_name))
         voc = np.load(os.path.join(self.vocal_path, file_name))
 
-        # 2. Crop Freq (513 -> 512)
+        # 2. 裁切頻率 (513 -> 512)
         mix = mix[1:, :]
         voc = voc[1:, :]
 
-        # 3. Random Crop Time (Time -> 128)
-        target_len = 128
+        # 3. 隨機裁切時間軸 (Time -> 128)
+        target_len = INPUT_LEN
         curr_len = mix.shape[1]
         
         if curr_len > target_len:
+            # 隨機選一個起點
             start = random.randint(0, curr_len - target_len)
             mix = mix[:, start:start + target_len]
             voc = voc[:, start:start + target_len]
         else:
+            # Padding
             pad_width = target_len - curr_len
             mix = np.pad(mix, ((0, 0), (0, pad_width)), mode='constant')
             voc = np.pad(voc, ((0, 0), (0, pad_width)), mode='constant')
 
-        # 4. To Tensor (1, 512, 128)
+        # 4. 轉 Tensor
         mix = torch.from_numpy(mix[np.newaxis, :, :].astype(np.float32))
         voc = torch.from_numpy(voc[np.newaxis, :, :].astype(np.float32))
         
@@ -139,7 +140,7 @@ print(f"Start training for {args.epoch} epochs...")
 for ep in range(args.epoch):
     # --- Training Phase ---
     model.train()
-    loop = tqdm(train_loader, desc=f"Epoch {ep+1}/{args.epoch} [Train]")
+    loop = tqdm(train_loader, desc=f"Epoch {ep+1}/{args.epoch} [Train]", leave=False)
     train_loss_sum = 0
     
     for i, (mix, voc) in enumerate(loop):
@@ -194,5 +195,7 @@ python train.py \
     --train_folder unet_spectrograms/train \
     --valid_folder unet_spectrograms/valid \
     --save_path svs_unet.pth \
-    --epoch 500
+    --batch_size 16 \
+    --epoch 100 \
+    --load_path svs_unet.pth
 """

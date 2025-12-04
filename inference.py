@@ -4,6 +4,7 @@ import argparse
 import torch
 import os
 from tqdm import tqdm
+from utils import INPUT_LEN # 512
 
 def num2str(n):
     return str(n).zfill(4)
@@ -26,9 +27,9 @@ def num2str(n):
 """
 # 1. 參數設定
 parser = argparse.ArgumentParser()
-parser.add_argument('--model_path', type=str, default='svs_unet.pth', help="訓練好的模型權重檔")
-parser.add_argument('--mixture_folder', type=str, required=True, help="包含 .npy 頻譜圖的資料夾 (例如 unet_spectrogram/test/mixture)")
-parser.add_argument('--tar', type=str, default='inference_result', help="輸出預測結果的資料夾")
+parser.add_argument('--model_path',     type=str, default='svs_unet.pth',     help="訓練好的模型權重檔")
+parser.add_argument('--mixture_folder', type=str, required=True,              help="包含 .npy 頻譜圖的資料夾 (例如 unet_spectrogram/test/mixture)")
+parser.add_argument('--tar',            type=str, default='inference_result', help="輸出預測結果的資料夾")
 args = parser.parse_args()
 
 if not os.path.exists(args.tar):
@@ -66,8 +67,8 @@ with torch.no_grad():
         spec_sum = None
         
         # 滑動視窗推論 (Sliding Window Inference)
-        # 每次切 128 的長度丟進去
-        seg_len = 128
+        # 每次切 128 的長度丟進去 <--- 應該要跟 train.py 中的 target_len 一樣!!!!!
+        seg_len = INPUT_LEN
         num_segments = (mix_crop.shape[-1] // seg_len) + 1
         
         generated_spec = []
@@ -142,7 +143,7 @@ python data.py \
     --direction to_spec
 
 python inference.py \
-    --model_path svs_unet.pt \
+    --model_path svs_unet.pth \
     --mixture_folder custom_result/spec/mixture \
     --tar custom_result/spec/rm_vocal_pred
 

@@ -7,3 +7,5 @@ def num2str(n):
         return '0' + str(n)
     else:
         return str(n)
+    
+INPUT_LEN = 512
