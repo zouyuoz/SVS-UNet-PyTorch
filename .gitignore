@@ -4,8 +4,8 @@ __pycache__/
 .python-version
 
 *.pt
+*.pth
 
 custom_song/
-custom_spec/
-my_result_song/
-test_results_wav/
+custom_result/
+test_results/

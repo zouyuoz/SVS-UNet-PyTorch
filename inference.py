@@ -123,8 +123,32 @@ with torch.no_grad():
 print("分離完成！")
 
 """
-python data.py --direction to_wave --src unet_spectrograms/test/inference_output --phase unet_spectrograms/test/mixture --tar test_results_wav
-python data.py --src custom_song --tar custom_spec --direction to_spec
-python inference.py --model_path svs_1204.pth --mixture_folder custom_spec/mixture --tar custom_spec/vocal_pred
-python data.py --direction to_wave --src custom_spec/vocal_pred --phase custom_spec/mixture --tar my_result_song
+python inference.py \
+    --model_path svs_unet.pth \
+    --mixture_folder unet_spectrograms/test/mixture \
+    --tar test_results/spec
+
+python data.py \
+    --direction to_wave \
+    --src test_results/spec \
+    --phase unet_spectrograms/test/mixture  \
+    --tar test_results/wav
+
+---
+
+python data.py \
+    --src custom_song \
+    --tar custom_result/spec \
+    --direction to_spec
+
+python inference.py \
+    --model_path svs_unet.pt \
+    --mixture_folder custom_result/spec/mixture \
+    --tar custom_result/spec/rm_vocal_pred
+
+python data.py \
+    --direction to_wave \
+    --src custom_result/spec/rm_vocal_pred \
+    --phase custom_result/spec/mixture \
+    --tar custom_result/wav
 """

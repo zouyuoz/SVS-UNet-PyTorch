@@ -188,3 +188,11 @@ for ep in range(args.epoch):
     model.save(args.save_path)
 
 print("Finish training!")
+
+"""
+python train.py \
+    --train_folder unet_spectrograms/train \
+    --valid_folder unet_spectrograms/valid \
+    --save_path svs_unet.pth \
+    --epoch 500
+"""

@@ -84,9 +84,9 @@ class UNet(nn.Module):
         self.loss_list_vocal = []
         
         # Define the criterion and optimizer
-        self.optim = torch.optim.Adam(self.parameters(), lr=1e-4)
-        # self.crit = nn.L1Loss()
-        self.crit = nn.SmoothL1Loss()
+        self.optim = torch.optim.Adam(self.parameters(), lr=5e-4)
+        self.crit = nn.L1Loss()
+        # self.crit = nn.SmoothL1Loss()
         
         # We handle device movement externally or via .to(device)
 
