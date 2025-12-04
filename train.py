@@ -106,7 +106,7 @@ train_dataset = SpectrogramDataset(args.train_folder)
 train_loader = Data.DataLoader(
     dataset=train_dataset,
     batch_size=args.batch_size,
-    num_workers=4, 
+    num_workers=8, 
     shuffle=True,
     pin_memory=True if device.type == 'cuda' else False
 )
@@ -195,7 +195,7 @@ python train.py \
     --train_folder unet_spectrograms/train \
     --valid_folder unet_spectrograms/valid \
     --save_path svs_unet.pth \
-    --batch_size 16 \
+    --batch_size 32 \
     --epoch 100 \
     --load_path svs_unet.pth
 """

@@ -14,10 +14,6 @@ def evaluate_folder(ref_folder, est_folder):
     ref_files = sorted(glob.glob(os.path.join(ref_folder, "*.wav")))
     est_files = sorted(glob.glob(os.path.join(est_folder, "*.wav")))
 
-    if len(ref_files) == 0 or len(est_files) == 0:
-        print("錯誤：找不到音訊檔案，請確認路徑。")
-        return
-
     sdr_list, sir_list, sar_list = [], [], []
 
     print(f"開始評估 {len(est_files)} 首歌曲...")
@@ -29,6 +25,8 @@ def evaluate_folder(ref_folder, est_folder):
         
         # 確保採樣率一致
         assert sr == sr2, "採樣率不一致！"
+        if ref_audio.ndim > 1:
+                ref_audio = np.mean(ref_audio, axis=1)
 
         # 確保長度一致 (取最小值)
         min_len = min(len(ref_audio), len(est_audio))
@@ -70,3 +68,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     evaluate_folder(args.ref, args.est)
+    
+"""
+python evaluate.py \
+    --ref test_results/gt_wav \
+    --est test_results/wav
+"""

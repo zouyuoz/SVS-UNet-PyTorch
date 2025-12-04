@@ -27,9 +27,10 @@ def num2str(n):
 """
 # 1. 參數設定
 parser = argparse.ArgumentParser()
-parser.add_argument('--model_path',     type=str, default='svs_unet.pth',     help="訓練好的模型權重檔")
-parser.add_argument('--mixture_folder', type=str, required=True,              help="包含 .npy 頻譜圖的資料夾 (例如 unet_spectrogram/test/mixture)")
-parser.add_argument('--tar',            type=str, default='inference_result', help="輸出預測結果的資料夾")
+parser.add_argument('--model_path',     type=str,  default = 'svs_unet.pth',     help="訓練好的模型權重檔")
+parser.add_argument('--tar',            type=str,  default = 'inference_result', help="輸出預測結果的資料夾")
+parser.add_argument('--vocal_solo',    type=bool,  default = True,               help="輸出頻譜圖將只有人聲")
+parser.add_argument('--mixture_folder', type=str, required = True,               help="包含 mixture 頻譜圖的資料夾")
 args = parser.parse_args()
 
 if not os.path.exists(args.tar):
@@ -93,8 +94,10 @@ with torch.no_grad():
             # 轉 Tensor (1, 1, 512, 128)
             seg_tensor = torch.from_numpy(seg_input[np.newaxis, np.newaxis, :, :]).float().to(device)
 
-            # 生成 Mask
+            # 生成 人聲Mask
             msk = model(seg_tensor)
+            # 如果要去除人聲，則改成 1 - msk
+            if (not args.vocal_solo): msk = 1 - msk
 
             # 應用 Mask (Vocal = Mix * Mask)
             # 根據 train.py 的 loss 計算方式：loss = crit(msk * mix, voc)
@@ -125,7 +128,7 @@ print("分離完成！")
 
 """
 python inference.py \
-    --model_path svs_unet.pth \
+    --model_path svs_20+100_epochs.pth \
     --mixture_folder unet_spectrograms/test/mixture \
     --tar test_results/spec
 
@@ -135,7 +138,7 @@ python data.py \
     --phase unet_spectrograms/test/mixture  \
     --tar test_results/wav
 
----
+--- svs_20+100_epochs.pth
 
 python data.py \
     --src custom_song \
@@ -143,7 +146,7 @@ python data.py \
     --direction to_spec
 
 python inference.py \
-    --model_path svs_unet.pth \
+    --model_path svs_20+100_epochs.pth \
     --mixture_folder custom_result/spec/mixture \
     --tar custom_result/spec/rm_vocal_pred
 
@@ -152,4 +155,10 @@ python data.py \
     --src custom_result/spec/rm_vocal_pred \
     --phase custom_result/spec/mixture \
     --tar custom_result/wav
+    
+python data.py \
+--direction to_wave \
+--src unet_spectrograms/test/vocal \
+--phase custom_result/spec/mixture \
+--tar test_result/gt_wav
 """
