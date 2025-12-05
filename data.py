@@ -33,9 +33,6 @@ args = parser.parse_args()
 # 格式: 'wav檔名': '目標資料夾名稱'
 TRACK_MAP = {
     'mixture.wav': 'mixture',
-    'drums.wav':   'drum',
-    'bass.wav':    'bass',
-    'other.wav':   'rest',   # 原專案將 'other' 稱為 'rest'
     'vocals.wav':  'vocal'
 } 
 
@@ -43,8 +40,9 @@ if args.direction == 'to_spec':
     # 建立目標資料夾結構
     if not os.path.exists(args.tar):
         os.makedirs(args.tar, exist_ok=True)
-        for folder_name in TRACK_MAP.values():
-            os.makedirs(os.path.join(args.tar, folder_name), exist_ok=True)
+        
+    for folder_name in TRACK_MAP.values():
+        os.makedirs(os.path.join(args.tar, folder_name), exist_ok=True)
 
     print(f"正在掃描來源資料夾: {args.src}")
     song_folders = sorted([

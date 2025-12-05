@@ -8,4 +8,5 @@ def num2str(n):
     else:
         return str(n)
     
-INPUT_LEN = 512
+INPUT_LEN = 128
+SAMPLES_PER_SONG = 8

@@ -6,7 +6,7 @@ import torch
 import os
 from tqdm import tqdm
 import random
-from utils import INPUT_LEN # 512
+from utils import *
 
 """
     SVS-UNet Training Script with Validation
@@ -21,7 +21,7 @@ print(f"Using device: {device}")
 # Dataset Definition
 # =========================================================================================
 class SpectrogramDataset(Data.Dataset):
-    def __init__(self, path, samples_per_song=64): # <--- 新增參數，預設每首歌抽 50 次
+    def __init__(self, path, samples_per_song=SAMPLES_PER_SONG): # <--- 新增參數，預設每首歌抽 50 次
         self.path = path
         self.mixture_path = os.path.join(path, 'mixture')
         self.vocal_path = os.path.join(path, 'vocal')
@@ -198,12 +198,8 @@ print("Finish training!")
 python train.py \
     --train_folder unet_spectrograms/train \
     --valid_folder unet_spectrograms/valid \
-    --save_path svs_1205_morn.pth \
+    --save_path svs_1206.pth \
     --batch_size 32 \
-    --epoch 14 \
+    --epoch 10 \
     --load_path svs_1205_morn.pth
-    
-epoch = 280 - 186 = 94
-94-80=14
-load_path svs_1205_morn.pth
 """
