@@ -73,4 +73,8 @@ if __name__ == "__main__":
 python evaluate.py \
     --ref test_results/gt_wav \
     --est test_results/wav
+    
+---
+
+best_val 2.2913
 """

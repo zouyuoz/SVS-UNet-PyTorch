@@ -8,6 +8,7 @@ dependencies = [
     "argparse>=1.4.0",
     "librosa==0.10.1",
     "matplotlib>=3.10.7",
+    "mir-eval>=0.8.2",
     "numpy<2.0.0",
     "setuptools>=80.9.0",
     "soundfile==0.12.1",

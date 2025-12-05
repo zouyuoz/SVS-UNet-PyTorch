@@ -92,9 +92,9 @@ parser.add_argument('--train_folder', type = str, default = './data/vocals')
 parser.add_argument('--load_path'   , type = str, default = 'result.pth')
 parser.add_argument('--save_path'   , type = str, default = 'result.pth')
 parser.add_argument('--epoch'       , type = int, default = 2)
+parser.add_argument('--batch_size'  , type = int, default = 2)
 
 parser.add_argument('--valid_folder', type = str, default = 'unet_spectrograms/valid', help="驗證集路徑")
-parser.add_argument('--batch_size'  , type = int, default = 2)
 parser.add_argument('--val_interval', type = int, default = 20, help="每幾輪做一次驗證")
 
 args = parser.parse_args()
@@ -131,6 +131,8 @@ model.to(device)
 
 if os.path.exists(args.load_path):
     model.load(args.load_path)
+
+best_val_loss = .7
 
 # =========================================================================================
 # Main Loop
@@ -174,6 +176,8 @@ for ep in range(args.epoch):
                 val_loss_sum += loss.item()
         
         avg_val_loss = val_loss_sum / len(valid_loader)
+        if avg_val_loss < best_val_loss:
+            model.save("svs_best_val.pth")
         
         # 印出結果
         print(f"\n[Epoch {ep+1}] Train Loss: {avg_train_loss:.6f} | Val Loss: {avg_val_loss:.6f}")
@@ -194,8 +198,12 @@ print("Finish training!")
 python train.py \
     --train_folder unet_spectrograms/train \
     --valid_folder unet_spectrograms/valid \
-    --save_path svs_unet.pth \
+    --save_path svs_1205_morn.pth \
     --batch_size 32 \
-    --epoch 100 \
-    --load_path svs_unet.pth
+    --epoch 14 \
+    --load_path svs_1205_morn.pth
+    
+epoch = 280 - 186 = 94
+94-80=14
+load_path svs_1205_morn.pth
 """

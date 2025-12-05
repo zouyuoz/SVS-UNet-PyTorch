@@ -29,7 +29,7 @@ def num2str(n):
 parser = argparse.ArgumentParser()
 parser.add_argument('--model_path',     type=str,  default = 'svs_unet.pth',     help="訓練好的模型權重檔")
 parser.add_argument('--tar',            type=str,  default = 'inference_result', help="輸出預測結果的資料夾")
-parser.add_argument('--vocal_solo',    type=bool,  default = True,               help="輸出頻譜圖將只有人聲")
+parser.add_argument('--vocal_solo',     type=int,  default = 1,                  help="輸出頻譜圖將只有人聲")
 parser.add_argument('--mixture_folder', type=str, required = True,               help="包含 mixture 頻譜圖的資料夾")
 args = parser.parse_args()
 
@@ -55,6 +55,7 @@ model.eval()
 with torch.no_grad():
     # 掃描 mixture 資料夾中的 spec 檔案
     files = sorted([f for f in os.listdir(args.mixture_folder) if f.endswith('_spec.npy')])
+    files = files[:10]
     print(f"找到 {len(files)} 個檔案，開始處理...")
 
     bar = tqdm(files)
@@ -128,9 +129,10 @@ print("分離完成！")
 
 """
 python inference.py \
-    --model_path svs_20+100_epochs.pth \
+    --model_path svs_400.pth \
     --mixture_folder unet_spectrograms/test/mixture \
-    --tar test_results/spec
+    --tar test_results/spec \
+    --vocal_solo 1
 
 python data.py \
     --direction to_wave \
@@ -138,7 +140,7 @@ python data.py \
     --phase unet_spectrograms/test/mixture  \
     --tar test_results/wav
 
---- svs_20+100_epochs.pth
+--- svs_best_val.pth
 
 python data.py \
     --src custom_song \
@@ -146,16 +148,19 @@ python data.py \
     --direction to_spec
 
 python inference.py \
-    --model_path svs_20+100_epochs.pth \
+    --model_path svs_best_val.pth \
     --mixture_folder custom_result/spec/mixture \
-    --tar custom_result/spec/rm_vocal_pred
+    --tar custom_result/spec/rm_vocal_pred \
+    --vocal_solo 0
 
 python data.py \
     --direction to_wave \
     --src custom_result/spec/rm_vocal_pred \
     --phase custom_result/spec/mixture \
     --tar custom_result/wav
-    
+
+---
+
 python data.py \
 --direction to_wave \
 --src unet_spectrograms/test/vocal \

@@ -1,0 +1,197 @@
+Load the pre-trained model from svs_20+100_epochs.pth
+Start training for 280 epochs...
+Epoch 1 Avg Loss: 0.000846                                                                                                                                                                                   
+Epoch 2 Avg Loss: 0.000834                                                                                                                                                                                   
+Epoch 3 Avg Loss: 0.000815                                                                                                                                                                                   
+Epoch 4 Avg Loss: 0.000840                                                                                                                                                                                   
+Epoch 5 Avg Loss: 0.000821                                                                                                                                                                                   
+Epoch 6 Avg Loss: 0.000831                                                                                                                                                                                   
+Epoch 7 Avg Loss: 0.000836                                                                                                                                                                                   
+Epoch 8 Avg Loss: 0.000823                                                                                                                                                                                   
+Epoch 9 Avg Loss: 0.000837                                                                                                                                                                                   
+Epoch 10 Avg Loss: 0.000826                                                                                                                                                                                  
+Epoch 11 Avg Loss: 0.000825                                                                                                                                                                                  
+Epoch 12 Avg Loss: 0.000843                                                                                                                                                                                  
+Epoch 13 Avg Loss: 0.000842                                                                                                                                                                                  
+Epoch 14 Avg Loss: 0.000825                                                                                                                                                                                  
+Epoch 15 Avg Loss: 0.000840                                                                                                                                                                                  
+Epoch 16 Avg Loss: 0.000816                                                                                                                                                                                  
+Epoch 17 Avg Loss: 0.000839                                                                                                                                                                                  
+Epoch 18 Avg Loss: 0.000821                                                                                                                                                                                  
+Epoch 19 Avg Loss: 0.000826                                                                                                                                                                                  
+                                                                                                                                                                                                             
+[Epoch 20] Train Loss: 0.000823 | Val Loss: 0.000764
+Epoch 21 Avg Loss: 0.000838                                                                                                                                                                                  
+Epoch 22 Avg Loss: 0.000835                                                                                                                                                                                  
+Epoch 23 Avg Loss: 0.000829                                                                                                                                                                                  
+Epoch 24 Avg Loss: 0.000830                                                                                                                                                                                  
+Epoch 25 Avg Loss: 0.000813                                                                                                                                                                                  
+Epoch 26 Avg Loss: 0.000811                                                                                                                                                                                  
+Epoch 27 Avg Loss: 0.000811                                                                                                                                                                                  
+Epoch 28 Avg Loss: 0.000824                                                                                                                                                                                  
+Epoch 29 Avg Loss: 0.000831                                                                                                                                                                                  
+Epoch 30 Avg Loss: 0.000830                                                                                                                                                                                  
+Epoch 31 Avg Loss: 0.000817                                                                                                                                                                                  
+Epoch 32 Avg Loss: 0.000815                                                                                                                                                                                  
+Epoch 33 Avg Loss: 0.000812                                                                                                                                                                                  
+Epoch 34 Avg Loss: 0.000825                                                                                                                                                                                  
+Epoch 35 Avg Loss: 0.000809                                                                                                                                                                                  
+Epoch 36 Avg Loss: 0.000811                                                                                                                                                                                  
+Epoch 37 Avg Loss: 0.000835                                                                                                                                                                                  
+Epoch 38 Avg Loss: 0.000809                                                                                                                                                                                  
+Epoch 39 Avg Loss: 0.000817                                                                                                                                                                                  
+                                                                                                                                                                                                             
+[Epoch 40] Train Loss: 0.000834 | Val Loss: 0.000746
+Epoch 41 Avg Loss: 0.000811                                                                                                                                                                                  
+Epoch 42 Avg Loss: 0.000814                                                                                                                                                                                  
+Epoch 43 Avg Loss: 0.000819                                                                                                                                                                                  
+Epoch 44 Avg Loss: 0.000820                                                                                                                                                                                  
+Epoch 45 Avg Loss: 0.000808                                                                                                                                                                                  
+Epoch 46 Avg Loss: 0.000807                                                                                                                                                                                  
+Epoch 47 Avg Loss: 0.000821                                                                                                                                                                                  
+Epoch 48 Avg Loss: 0.000814                                                                                                                                                                                  
+Epoch 49 Avg Loss: 0.000803                                                                                                                                                                                  
+Epoch 50 Avg Loss: 0.000798                                                                                                                                                                                  
+Epoch 51 Avg Loss: 0.000814                                                                                                                                                                                  
+Epoch 52 Avg Loss: 0.000817                                                                                                                                                                                  
+Epoch 53 Avg Loss: 0.000809                                                                                                                                                                                  
+Epoch 54 Avg Loss: 0.000807                                                                                                                                                                                  
+Epoch 55 Avg Loss: 0.000813                                                                                                                                                                                  
+Epoch 56 Avg Loss: 0.000804                                                                                                                                                                                  
+Epoch 57 Avg Loss: 0.000821                                                                                                                                                                                  
+Epoch 58 Avg Loss: 0.000807                                                                                                                                                                                  
+Epoch 59 Avg Loss: 0.000806                                                                                                                                                                                  
+                                                                                                                                                                                                             
+[Epoch 60] Train Loss: 0.000815 | Val Loss: 0.000756
+Epoch 61 Avg Loss: 0.000806                                                                                                                                                                                  
+Epoch 62 Avg Loss: 0.000821                                                                                                                                                                                  
+Epoch 63 Avg Loss: 0.000805                                                                                                                                                                                  
+Epoch 64 Avg Loss: 0.000814                                                                                                                                                                                  
+Epoch 65 Avg Loss: 0.000808                                                                                                                                                                                  
+Epoch 66 Avg Loss: 0.000819                                                                                                                                                                                  
+Epoch 67 Avg Loss: 0.000796                                                                                                                                                                                  
+Epoch 68 Avg Loss: 0.000804                                                                                                                                                                                  
+Epoch 69 Avg Loss: 0.000801                                                                                                                                                                                  
+Epoch 70 Avg Loss: 0.000812                                                                                                                                                                                     
+Epoch 71 Avg Loss: 0.000814                                                                                                                                                                                     
+Epoch 72 Avg Loss: 0.000794                                                                                                                                                                                     
+Epoch 73 Avg Loss: 0.000794                                                                                                                                                                                     
+Epoch 74 Avg Loss: 0.000803                                                                                                                                                                                     
+Epoch 75 Avg Loss: 0.000801                                                                                                                                                                                     
+Epoch 76 Avg Loss: 0.000807                                                                                                                                                                                     
+Epoch 77 Avg Loss: 0.000801                                                                                                                                                                                     
+Epoch 78 Avg Loss: 0.000786                                                                                                                                                                                     
+Epoch 79 Avg Loss: 0.000795                                                                                                                                                                                     
+                                                                                                                                                                                                                
+[Epoch 80] Train Loss: 0.000797 | Val Loss: 0.000744
+Epoch 81 Avg Loss: 0.000788                                                                                                                                                                                     
+Epoch 82 Avg Loss: 0.000805                                                                                                                                                                                     
+Epoch 83 Avg Loss: 0.000802                                                                                                                                                                                     
+Epoch 84 Avg Loss: 0.000813                                                                                                                                                                                     
+Epoch 85 Avg Loss: 0.000818                                                                                                                                                                                     
+Epoch 86 Avg Loss: 0.000802                                                                                                                                                                                     
+Epoch 87 Avg Loss: 0.000797                                                                                                                                                                                     
+Epoch 88 Avg Loss: 0.000813                                                                                                                                                                                     
+Epoch 89 Avg Loss: 0.000803                                                                                                                                                                                     
+Epoch 90 Avg Loss: 0.000802                                                                                                                                                                                     
+Epoch 91 Avg Loss: 0.000805                                                                                                                                                                                     
+Epoch 92 Avg Loss: 0.000794                                                                                                                                                                                     
+Epoch 93 Avg Loss: 0.000796                                                                                                                                                                                     
+Epoch 94 Avg Loss: 0.000784                                                                                                                                                                                     
+Epoch 95 Avg Loss: 0.000802                                                                                                                                                                                     
+Epoch 96 Avg Loss: 0.000805                                                                                                                                                                                     
+Epoch 97 Avg Loss: 0.000799                                                                                                                                                                                     
+Epoch 98 Avg Loss: 0.000807                                                                                                                                                                                     
+Epoch 99 Avg Loss: 0.000807                                                                                                                                                                                     
+                                                                                                                                                                                                                
+[Epoch 100] Train Loss: 0.000803 | Val Loss: 0.000736
+Epoch 101 Avg Loss: 0.000816                                                                                                                                                                                    
+Epoch 102 Avg Loss: 0.000786                                                                                                                                                                                    
+Epoch 103 Avg Loss: 0.000793                                                                                                                                                                                    
+Epoch 104 Avg Loss: 0.000801                                                                                                                                                                                    
+Epoch 105 Avg Loss: 0.000799                                                                                                                                                                                    
+Epoch 106 Avg Loss: 0.000796                                                                                                                                                                                    
+Epoch 107 Avg Loss: 0.000802                                                                                                                                                                                    
+Epoch 108 Avg Loss: 0.000790                                                                                                                                                                                    
+Epoch 109 Avg Loss: 0.000792                                                                                                                                                                                    
+Epoch 110 Avg Loss: 0.000798                                                                                                                                                                                    
+Epoch 111 Avg Loss: 0.000780                                                                                                                                                                                    
+Epoch 112 Avg Loss: 0.000800                                                                                                                                                                                    
+Epoch 113 Avg Loss: 0.000798                                                                                                                                                                                    
+Epoch 114 Avg Loss: 0.000790                                                                                                                                                                                    
+Epoch 115 Avg Loss: 0.000799                                                                                                                                                                                    
+Epoch 116 Avg Loss: 0.000793                                                                                                                                                                                    
+Epoch 117 Avg Loss: 0.000794                                                                                                                                                                                    
+Epoch 118 Avg Loss: 0.000793                                                                                                                                                                                    
+Epoch 119 Avg Loss: 0.000795                                                                                                                                                                                    
+                                                                                                                                                                                                                
+[Epoch 120] Train Loss: 0.000788 | Val Loss: 0.000707
+Epoch 121 Avg Loss: 0.000809                                                                                                                                                                                    
+Epoch 122 Avg Loss: 0.000793                                                                                                                                                                                    
+Epoch 123 Avg Loss: 0.000781                                                                                                                                                                                    
+Epoch 124 Avg Loss: 0.000792                                                                                                                                                                                    
+Epoch 125 Avg Loss: 0.000800                                                                                                                                                                                    
+Epoch 126 Avg Loss: 0.000781                                                                                                                                                                                    
+Epoch 127 Avg Loss: 0.000798                                                                                                                                                                                    
+Epoch 128 Avg Loss: 0.000787                                                                                                                                                                                    
+Epoch 129 Avg Loss: 0.000802                                                                                                                                                                                    
+Epoch 130 Avg Loss: 0.000782                                                                                                                                                                                    
+Epoch 131 Avg Loss: 0.000796                                                                                                                                                                                    
+Epoch 132 Avg Loss: 0.000795                                                                                                                                                                                    
+Epoch 133 Avg Loss: 0.000793                                                                                                                                                                                    
+Epoch 134 Avg Loss: 0.000795                                                                                                                                                                                    
+Epoch 135 Avg Loss: 0.000785                                                                                                                                                                                    
+Epoch 136 Avg Loss: 0.000783                                                                                                                                                                                    
+Epoch 137 Avg Loss: 0.000794                                                                                                                                                                                    
+Epoch 138 Avg Loss: 0.000783                                                                                                                                                                                    
+Epoch 139 Avg Loss: 0.000793                                                                                                                                                                                    
+                                                                                                                                                                                                                
+[Epoch 140] Train Loss: 0.000799 | Val Loss: 0.000728
+Epoch 141 Avg Loss: 0.000791                                                                                                                                                                                    
+Epoch 142 Avg Loss: 0.000789                                                                                                                                                                                    
+Epoch 143 Avg Loss: 0.000786                                                                                                                                                                                    
+Epoch 144 Avg Loss: 0.000801                                                                                                                                                                                    
+Epoch 145 Avg Loss: 0.000791                                                                                                                                                                                    
+Epoch 146 Avg Loss: 0.000791                                                                                                                                                                                    
+Epoch 147 Avg Loss: 0.000800                                                                                                                                                                                    
+Epoch 148 Avg Loss: 0.000790                                                                                                                                                                                    
+Epoch 149 Avg Loss: 0.000781                                                                                                                                                                                    
+Epoch 150 Avg Loss: 0.000778                                                                                                                                                                                    
+Epoch 151 Avg Loss: 0.000784                                                                                                                                                                                    
+Epoch 152 Avg Loss: 0.000799                                                                                                                                                                                    
+Epoch 153 Avg Loss: 0.000781                                                                                                                                                                                    
+Epoch 154 Avg Loss: 0.000777                                                                                                                                                                                    
+Epoch 155 Avg Loss: 0.000773                                                                                                                                                                                    
+Epoch 156 Avg Loss: 0.000773                                                                                                                                                                                    
+Epoch 157 Avg Loss: 0.000777                                                                                                                                                                                    
+Epoch 158 Avg Loss: 0.000788                                                                                                                                                                                    
+Epoch 159 Avg Loss: 0.000789                                                                                                                                                                                    
+                                                                                                                                                                                                                
+[Epoch 160] Train Loss: 0.000783 | Val Loss: 0.000732
+Epoch 161 Avg Loss: 0.000789                                                                                                                                                                                    
+Epoch 162 Avg Loss: 0.000794                                                                                                                                                                                    
+Epoch 163 Avg Loss: 0.000779                                                                                                                                                                                    
+Epoch 164 Avg Loss: 0.000783                                                                                                                                                                                    
+Epoch 165 Avg Loss: 0.000782                                                                                                                                                                                    
+Epoch 166 Avg Loss: 0.000775                                                                                                                                                                                    
+Epoch 167 Avg Loss: 0.000790                                                                                                                                                                                    
+Epoch 168 Avg Loss: 0.000777                                                                                                                                                                                    
+Epoch 169 Avg Loss: 0.000779                                                                                                                                                                                    
+Epoch 170 Avg Loss: 0.000781                                                                                                                                                                                    
+Epoch 171 Avg Loss: 0.000784                                                                                                                                                                                    
+Epoch 172 Avg Loss: 0.000787                                                                                                                                                                                    
+Epoch 173 Avg Loss: 0.000782                                                                                                                                                                                    
+Epoch 174 Avg Loss: 0.000794                                                                                                                                                                                    
+Epoch 175 Avg Loss: 0.000782                                                                                                                                                                                    
+Epoch 176 Avg Loss: 0.000770                                                                                                                                                                                    
+Epoch 177 Avg Loss: 0.000778                                                                                                                                                                                    
+Epoch 178 Avg Loss: 0.000775                                                                                                                                                                                    
+Epoch 179 Avg Loss: 0.000777                                                                                                                                                                                    
+                                                                                                                                                                                                                
+[Epoch 180] Train Loss: 0.000785 | Val Loss: 0.000719
+Epoch 181 Avg Loss: 0.000775                                                                                                                                                                                    
+Epoch 182 Avg Loss: 0.000766                                                                                                                                                                                    
+Epoch 183 Avg Loss: 0.000769                                                                                                                                                                                    
+Epoch 184 Avg Loss: 0.000780                                                                                                                                                                                    
+Epoch 185 Avg Loss: 0.000791
+Epoch 186 Avg Loss: 0.000777
