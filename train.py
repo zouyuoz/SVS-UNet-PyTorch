@@ -134,7 +134,7 @@ if os.path.exists(args.load_path):
 
 best_val_loss = 1.
 log_buffer = []
-log_file = 'log_500.txt'
+log_file = 'log_1207.txt'
 
 # =========================================================================================
 # Main Loop
@@ -159,7 +159,7 @@ for ep in range(args.epoch):
         loop.set_postfix(loss=current_loss)
     
     avg_train_loss = train_loss_sum / len(train_loader)
-    log_buffer.append(f"{avg_train_loss:.6f}\n")
+    log_buffer.append(f"{avg_train_loss}\n")
     
     # --- Validation Phase (Every 10 epochs) ---
     if valid_loader and (ep + 1) % args.val_interval == 0:
@@ -179,11 +179,11 @@ for ep in range(args.epoch):
                 val_loss_sum += loss.item()
         
         avg_val_loss = val_loss_sum / len(valid_loader)
-        log_buffer.append(f"Val {avg_val_loss:.6f}\n")
-        print(f"\n[Epoch {ep+1}] Train Loss: {avg_train_loss:.6f} | Val Loss: {avg_val_loss:.6f}")
+        log_buffer.append(f"Val {avg_val_loss}\n")
+        print(f"\n[Epoch {ep+1}] Train Loss: {avg_train_loss:.4e} | Val Loss: {avg_val_loss:.4e}")
         
         if avg_val_loss < best_val_loss:
-            model.save("svs_best_500.pth")
+            model.save("svs_best_1207.pth")
             
         # [新增] 觸發 Validation 時，將累積的 Buffer 寫入 log.txt
         try:
@@ -196,7 +196,7 @@ for ep in range(args.epoch):
     
     else:
         # 平常只印 Train Loss
-        print(f"Epoch {ep+1} Avg Loss: {avg_train_loss:.6f}")
+        print(f"Epoch {ep+1} Avg Loss: {avg_train_loss:.4e}")
 
     # Save Model
     model.save(args.save_path)
@@ -216,5 +216,5 @@ python train.py \
     --save_path svs_1207.pth \
     --batch_size 32 \
     --epoch 500 \
-    --val_interval 20 \
+    --val_interval 20
 """

@@ -84,7 +84,7 @@ class UNet(nn.Module):
         self.loss_list_vocal = []
         
         # Define the criterion and optimizer
-        self.optim = torch.optim.Adam(self.parameters(), lr=1e-3)
+        self.optim = torch.optim.Adam(self.parameters(), lr=5e-2)
         # self.crit = nn.L1Loss()
         self.crit = nn.SmoothL1Loss()
         

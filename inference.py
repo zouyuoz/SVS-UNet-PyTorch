@@ -162,6 +162,20 @@ python data.py \
     --tar custom_result/wav
 
 ---
+python inference.py \
+    --model_path svs_500.pth \
+    --mixture_folder unet_spectrograms_high/test/mixture \
+    --tar test_results/spec \
+    --vocal_solo 1
+
+python data.py \
+    --direction to_wave \
+    --src test_results/spec \
+    --phase unet_spectrograms_high/test/mixture  \
+    --tar test_results/wav
+    
+---
+
 
 
 """
