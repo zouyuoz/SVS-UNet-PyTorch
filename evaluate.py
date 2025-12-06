@@ -4,77 +4,130 @@ import soundfile as sf
 import mir_eval
 import numpy as np
 from tqdm import tqdm
+import argparse
 
-def evaluate_folder(ref_folder, est_folder):
+def evaluate_folder(ref_folder, est_folder, mix_folder):
     """
-    ref_folder: 包含 Ground Truth (純人聲) 的資料夾 (例如 unet_spectrograms/test/vocals 轉回來的 wav，或者原始 MUSDB18 的 wav)
-    est_folder: 您模型預測出來的 wav 資料夾
+    ref_folder: Ground Truth 人聲 wav 資料夾
+    est_folder: 模型預測的人聲 wav 資料夾
+    mix_folder: 原始 Mixture wav 資料夾 (用來計算伴奏)
     """
-    # 搜尋所有 wav 檔案
-    ref_files = sorted(glob.glob(os.path.join(ref_folder, "*.wav")))
+    # 搜尋所有 wav 檔案 (假設檔名是對應的)
     est_files = sorted(glob.glob(os.path.join(est_folder, "*.wav")))
+    
+    if len(est_files) == 0:
+        print("錯誤：找不到預測檔案。")
+        return
 
     sdr_list, sir_list, sar_list = [], [], []
+    
+    print(f"開始評估 {len(est_files)} 首歌曲 (Vocal + Accompaniment)...")
 
-    print(f"開始評估 {len(est_files)} 首歌曲...")
-
-    for ref_path, est_path in tqdm(zip(ref_files, est_files), total=len(ref_files)):
-        # 讀取音訊
-        ref_audio, sr = sf.read(ref_path)
-        est_audio, sr2 = sf.read(est_path)
+    for est_path in tqdm(est_files):
+        # 取得檔名 (basename)
+        basename = os.path.basename(est_path)
         
-        # 確保採樣率一致
-        assert sr == sr2, "採樣率不一致！"
-        if ref_audio.ndim > 1:
-                ref_audio = np.mean(ref_audio, axis=1)
+        # 組合對應的 GT 和 Mixture 路徑
+        # 注意：這裡假設檔名完全一致。如果不一致（例如多了前綴），請自行調整 replace 邏輯
+        ref_path = os.path.join(ref_folder, basename)
+        mix_path = os.path.join(mix_folder, basename)
+        
+        if not os.path.exists(ref_path) or not os.path.exists(mix_path):
+            print(f"[跳過] 找不到對應檔案: {basename}")
+            continue
+
+        # 讀取音訊
+        # y_est_voc: 預測的人聲
+        # y_ref_voc: 真實的人聲
+        # y_mix:     原始混音
+        y_est_voc, sr = sf.read(est_path)
+        y_ref_voc, _  = sf.read(ref_path)
+        y_mix, _      = sf.read(mix_path)
 
         # 確保長度一致 (取最小值)
-        min_len = min(len(ref_audio), len(est_audio))
-        ref_audio = ref_audio[:min_len]
-        est_audio = est_audio[:min_len]
+        min_len = min(len(y_est_voc), len(y_ref_voc), len(y_mix))
+        y_est_voc = y_est_voc[:min_len]
+        y_ref_voc = y_ref_voc[:min_len]
+        y_mix     = y_mix[:min_len]
 
-        # mir_eval 需要 shape 為 (n_sources, n_samples)
-        # 我們這裡是單一人聲評估，所以 n_sources = 1
-        reference_sources = ref_audio[np.newaxis, :]
-        estimated_sources = est_audio[np.newaxis, :]
+        # === 關鍵修改：建構雙軌訊號 (Vocal, Accompaniment) ===
+        
+        # 1. 計算 Ground Truth 的伴奏 (Ref Acc = Mix - Ref Voc)
+        y_ref_acc = y_mix - y_ref_voc
+        
+        # 2. 計算 預測 的伴奏 (Est Acc = Mix - Est Voc)
+        # 這是 SVS 評測的標準做法，確保 Mix = Voc + Acc 守恆
+        y_est_acc = y_mix - y_est_voc
+        
+        # === [新增] 靜音檢查 (關鍵修正) ===
+        # 檢查 Ground Truth 是否全為 0 (使用一個極小值判斷)
+        is_vocal_silent = np.sum(np.abs(y_ref_voc)) < 1e-6
+        is_acc_silent   = np.sum(np.abs(y_ref_acc)) < 1e-6
 
-        # 計算 BSS Eval 指標
+        if is_vocal_silent:
+            print(f"\n[跳過] {basename}: 人聲軌道為靜音 (純音樂?)")
+            continue
+        
+        if is_acc_silent:
+            print(f"\n[跳過] {basename}: 伴奏軌道為靜音 (清唱?)")
+            continue
+        # =================================
+
+        # 3. 堆疊成 (n_sources, n_samples)
+        # Source 0: Vocal
+        # Source 1: Accompaniment
+        reference_sources = np.vstack([y_ref_voc, y_ref_acc])
+        estimated_sources = np.vstack([y_est_voc, y_est_acc])
+
+        # 計算 BSS Eval
+        # compute_permutation=False: 因為我們很確定第0軌就是人聲，不需要讓演算法去猜配對
         (sdr, sir, sar, perm) = mir_eval.separation.bss_eval_sources(
             reference_sources, 
             estimated_sources, 
             compute_permutation=False
         )
 
+        # 我們只取 index 0 (Vocal) 的成績
         sdr_list.append(sdr[0])
         sir_list.append(sir[0])
         sar_list.append(sar[0])
 
-    print("\n====== 評估結果 (平均值) ======")
-    print(f"SDR: {np.mean(sdr_list):.4f} dB (越高越好)")
-    print(f"SIR: {np.mean(sir_list):.4f} dB (越高越好)")
-    print(f"SAR: {np.mean(sar_list):.4f} dB (越高越好)")
+    print("\n====== 人聲 (Vocals) 評估結果 (平均值) ======")
+    print(f"SDR: {np.mean(sdr_list):.4f} dB  (整體品質)")
+    print(f"SIR: {np.mean(sir_list):.4f} dB  (分離乾淨度/去伴奏能力)")
+    print(f"SAR: {np.mean(sar_list):.4f} dB  (無雜音程度/自然度)")
 
 if __name__ == "__main__":
-    # 設定路徑 (請依您的實際路徑修改)
-    # Ground Truth: 您必須先用 data.py 把 test set 的 vocals 轉回 wav 才能比較
-    # 或者是直接指到 MUSDB18 的原始 wav 資料夾
-    
-    # 範例：假設您把測試集的正確答案轉回 wav 放在 'test_gt_wav'
-    # 預測結果放在 'test_results_wav'
-    import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--ref', type=str, required=True, help="Ground Truth 音訊資料夾")
-    parser.add_argument('--est', type=str, required=True, help="預測結果音訊資料夾")
+    parser.add_argument('--ref', type=str, required=True, help="Ground Truth 人聲資料夾 (WAV)")
+    parser.add_argument('--est', type=str, required=True, help="預測結果資料夾 (WAV)")
+    parser.add_argument('--mix', type=str, required=True, help="原始 Mixture 資料夾 (WAV)")
     args = parser.parse_args()
     
-    evaluate_folder(args.ref, args.est)
-    
+    evaluate_folder(args.ref, args.est, args.mix)
 """
+# 範例指令
 python evaluate.py \
-    --ref test_results/gt_wav \
-    --est test_results/wav
+    --est test_results/wav \
+    --ref test_results/gt_vocal_wav_high \
+    --mix test_results/gt_mixture_wav_high
     
+python evaluate.py \
+    --est test_results/wav \
+    --ref test_results/gt_vocal_wav_low \
+    --mix test_results/gt_mixture_wav_low
 ---
+svs_best_val: 2.2913
 
-best_val 2.2913
+svs_400: 
+====== 人聲 (Vocals) 評估結果 (平均值) ======
+SDR: 4.3780  dB  (整體品質)
+SIR: 15.3448 dB  (分離乾淨度/去伴奏能力)
+SAR: 5.5292  dB  (無雜音程度/自然度)
+
+svs_1206:
+====== 人聲 (Vocals) 評估結果 (平均值) ======
+SDR: 2.4139  dB  (整體品質)
+SIR: 11.7054 dB  (分離乾淨度/去伴奏能力)
+SAR: 3.7478  dB  (無雜音程度/自然度)
 """

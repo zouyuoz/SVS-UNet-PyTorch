@@ -5,6 +5,7 @@ import os
 import soundfile as sf
 from tqdm import tqdm
 import warnings
+from utils import *
 
 # 忽略不必要的警告
 warnings.filterwarnings("ignore")
@@ -114,6 +115,7 @@ elif args.direction == 'to_wave':
     if not os.path.exists(args.tar): os.makedirs(args.tar, exist_ok=True)
     
     files = sorted([f for f in os.listdir(args.src) if f.endswith('_spec.npy')])
+    # files = files[:20]
     print(f"正在還原 {len(files)} 個檔案...")
     
     for spec_name in tqdm(files):
@@ -164,3 +166,23 @@ elif args.direction == 'to_wave':
 
 else:
     print("未知的方向，請使用 to_spec 或 to_wave")
+    
+"""
+python data.py \
+--direction to_wave \
+--src   unet_spectrograms/test/vocal \
+--phase unet_spectrograms/test/mixture  \
+--tar test_results/gt_vocal_wav_low \
+--hop_size 768 \
+--sr 8192
+
+python data.py \
+--direction to_wave \
+--src   unet_spectrograms/test/mixture \
+--phase unet_spectrograms/test/mixture  \
+--tar test_results/gt_mixture_wav_low \
+--hop_size 768 \
+--sr 8192
+
+
+"""

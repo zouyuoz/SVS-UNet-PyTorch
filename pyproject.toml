@@ -10,6 +10,7 @@ dependencies = [
     "matplotlib>=3.10.7",
     "mir-eval>=0.8.2",
     "numpy<2.0.0",
+    "pandas>=2.3.3",
     "setuptools>=80.9.0",
     "soundfile==0.12.1",
     "stempeg==0.2.3",

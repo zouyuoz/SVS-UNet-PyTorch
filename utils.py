@@ -7,6 +7,38 @@ def num2str(n):
         return '0' + str(n)
     else:
         return str(n)
-    
-INPUT_LEN = 128
-SAMPLES_PER_SONG = 8
+
+# --- Low Res Train Params ---
+# WINDOW_SIZE = 1024
+# HOP_SIZE = 768
+# SAMPLE_RATE = 8192
+# INPUT_LEN = 128
+# SAMPLES_PER_SONG = 8
+
+# --- 44100 Params ---
+# WINDOW_SIZE = 1024
+# HOP_SIZE = 256
+# SAMPLE_RATE = 44100
+# INPUT_LEN = 512
+# SAMPLES_PER_SONG = 64
+
+# --- Fine Tune Params ---
+# WINDOW_SIZE = 1024
+# HOP_SIZE = 256
+# SAMPLE_RATE = 44100
+# INPUT_LEN = 1536
+# SAMPLES_PER_SONG = 16
+# batch_size = 16
+# lr = 5e-4
+# self.crit = nn.L1Loss()
+
+# --- 1207 Params ---
+WINDOW_SIZE = 1024
+HOP_SIZE = 768
+SAMPLE_RATE = 44100
+INPUT_LEN = 512
+SAMPLES_PER_SONG = 64
+# batch_size = 32
+# lr = 1e-3
+# epoch = 500
+# self.crit = nn.SmoothL1Loss()

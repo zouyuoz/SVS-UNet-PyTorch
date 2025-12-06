@@ -4,7 +4,7 @@ import argparse
 import torch
 import os
 from tqdm import tqdm
-from utils import INPUT_LEN # 512
+from utils import *
 
 def num2str(n):
     return str(n).zfill(4)
@@ -27,10 +27,10 @@ def num2str(n):
 """
 # 1. 參數設定
 parser = argparse.ArgumentParser()
-parser.add_argument('--model_path',     type=str,  default = 'svs_unet.pth',     help="訓練好的模型權重檔")
-parser.add_argument('--tar',            type=str,  default = 'inference_result', help="輸出預測結果的資料夾")
-parser.add_argument('--vocal_solo',     type=int,  default = 1,                  help="輸出頻譜圖將只有人聲")
-parser.add_argument('--mixture_folder', type=str, required = True,               help="包含 mixture 頻譜圖的資料夾")
+parser.add_argument('--model_path'    , type=str, required = True)
+parser.add_argument('--tar'           , type=str, required = True)
+parser.add_argument('--mixture_folder', type=str, required = True)
+parser.add_argument('--vocal_solo'    , type=int,  default = 1, help="輸出頻譜圖將只有人聲")
 args = parser.parse_args()
 
 if not os.path.exists(args.tar):
@@ -55,7 +55,7 @@ model.eval()
 with torch.no_grad():
     # 掃描 mixture 資料夾中的 spec 檔案
     files = sorted([f for f in os.listdir(args.mixture_folder) if f.endswith('_spec.npy')])
-    files = files[:10]
+    # files = files[:10]
     print(f"找到 {len(files)} 個檔案，開始處理...")
 
     bar = tqdm(files)
@@ -69,7 +69,7 @@ with torch.no_grad():
         spec_sum = None
         
         # 滑動視窗推論 (Sliding Window Inference)
-        # 每次切 128 的長度丟進去 <--- 應該要跟 train.py 中的 target_len 一樣!!!!!
+        # 每次切 INPUT_LEN 的長度丟進去 <--- 應該要跟 train.py 中的 target_len 一樣!!!!!
         seg_len = INPUT_LEN
         num_segments = (mix_crop.shape[-1] // seg_len) + 1
         
@@ -129,7 +129,7 @@ print("分離完成！")
 
 """
 python inference.py \
-    --model_path svs_400.pth \
+    --model_path svs_best_1206.pth \
     --mixture_folder unet_spectrograms/test/mixture \
     --tar test_results/spec \
     --vocal_solo 1
@@ -138,9 +138,11 @@ python data.py \
     --direction to_wave \
     --src test_results/spec \
     --phase unet_spectrograms/test/mixture  \
-    --tar test_results/wav
+    --tar test_results/wav \
+	--hop_size 768 \
+	--sr 8192
 
---- svs_best_val.pth
+---
 
 python data.py \
     --src custom_song \
@@ -161,9 +163,5 @@ python data.py \
 
 ---
 
-python data.py \
---direction to_wave \
---src unet_spectrograms/test/vocal \
---phase custom_result/spec/mixture \
---tar test_result/gt_wav
+
 """

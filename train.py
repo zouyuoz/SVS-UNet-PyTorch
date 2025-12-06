@@ -21,7 +21,7 @@ print(f"Using device: {device}")
 # Dataset Definition
 # =========================================================================================
 class SpectrogramDataset(Data.Dataset):
-    def __init__(self, path, samples_per_song=SAMPLES_PER_SONG): # <--- 新增參數，預設每首歌抽 50 次
+    def __init__(self, path, samples_per_song=SAMPLES_PER_SONG):
         self.path = path
         self.mixture_path = os.path.join(path, 'mixture')
         self.vocal_path = os.path.join(path, 'vocal')
@@ -132,7 +132,9 @@ model.to(device)
 if os.path.exists(args.load_path):
     model.load(args.load_path)
 
-best_val_loss = .7
+best_val_loss = 1.
+log_buffer = []
+log_file = 'log_500.txt'
 
 # =========================================================================================
 # Main Loop
@@ -157,6 +159,7 @@ for ep in range(args.epoch):
         loop.set_postfix(loss=current_loss)
     
     avg_train_loss = train_loss_sum / len(train_loader)
+    log_buffer.append(f"{avg_train_loss:.6f}\n")
     
     # --- Validation Phase (Every 10 epochs) ---
     if valid_loader and (ep + 1) % args.val_interval == 0:
@@ -176,14 +179,20 @@ for ep in range(args.epoch):
                 val_loss_sum += loss.item()
         
         avg_val_loss = val_loss_sum / len(valid_loader)
-        if avg_val_loss < best_val_loss:
-            model.save("svs_best_val.pth")
-        
-        # 印出結果
+        log_buffer.append(f"Val {avg_val_loss:.6f}\n")
         print(f"\n[Epoch {ep+1}] Train Loss: {avg_train_loss:.6f} | Val Loss: {avg_val_loss:.6f}")
         
-        # 這裡可以加入「若 Val Loss 創新低則存檔」的邏輯 (Early Stopping 基礎)
-        # 目前先照舊，每輪都存
+        if avg_val_loss < best_val_loss:
+            model.save("svs_best_500.pth")
+            
+        # [新增] 觸發 Validation 時，將累積的 Buffer 寫入 log.txt
+        try:
+            with open(log_file, 'a') as f:
+                f.writelines(log_buffer)
+            print(f"已將 {len(log_buffer)} 筆 Loss 紀錄寫入 {log_file}")
+            log_buffer = [] # 清空 Buffer
+        except Exception as e:
+            print(f"寫入 {log_file} 失敗: {e}")
     
     else:
         # 平常只印 Train Loss
@@ -192,14 +201,20 @@ for ep in range(args.epoch):
     # Save Model
     model.save(args.save_path)
 
+if log_buffer:
+    with open(log_file, 'a') as f:
+        f.writelines(log_buffer)
+    print(f"剩餘 Log 已寫入 {log_file}")
+
 print("Finish training!")
 
 """
+1207 midnight:
 python train.py \
-    --train_folder unet_spectrograms/train \
-    --valid_folder unet_spectrograms/valid \
-    --save_path svs_1206.pth \
+    --train_folder unet_spectrograms_high/train \
+    --valid_folder unet_spectrograms_high/valid \
+    --save_path svs_1207.pth \
     --batch_size 32 \
-    --epoch 10 \
-    --load_path svs_1205_morn.pth
+    --epoch 500 \
+    --val_interval 20 \
 """

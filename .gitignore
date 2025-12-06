@@ -1,4 +1,5 @@
 unet_spectrograms/
+unet_spectrograms_high/
 .venv/
 __pycache__/
 .python-version
@@ -9,3 +10,6 @@ __pycache__/
 custom_song/
 custom_result/
 test_results/
+
+*.png
+*.jpg
