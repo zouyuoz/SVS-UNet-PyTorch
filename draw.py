@@ -23,9 +23,10 @@ def save_raw_image(npy_path: str, output_path: str):
     plt.close()
 
 # 範例執行
+example_npy_path = "unet_spectrograms_high/test/vocal/0007_Bobby Nobody - Stitch Up_spec.npy"
+save_raw_image(example_npy_path, 'custom_result/image/gt_1207_0007.png')
+
+
+example_npy_path = "test_results/spec/0007_Bobby Nobody - Stitch Up_spec.npy"
 example_npy_path = "unet_spectrograms/test/vocal/0000_AM Contra - Heart Peripheral_spec.npy"
-save_raw_image(example_npy_path, 'custom_result/image/gt__spec.png')
-
-
-example_npy_path = "test_results/spec/0000_AM Contra - Heart Peripheral_spec.npy"
-example_npy_path = "test_results/spec/0000_AM Contra - Heart Peripheral_spec.npy"
+example_npy_path = "unet_spectrograms_high/test/mixture/0007_Bobby Nobody - Stitch Up_spec.npy"

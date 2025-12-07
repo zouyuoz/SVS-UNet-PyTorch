@@ -5,7 +5,7 @@ import sys
 
 # --- 設定輸入檔案名稱 ---
 # 假設您的檔案名為 losses.txt
-TXT_FILE_NAME = 'log_500.txt'
+TXT_FILE_NAME = 'log_1207.txt'
 
 # --- 模擬數據生成結束 ---
 def process_and_plot_losses(file_path):

@@ -55,7 +55,7 @@ model.eval()
 with torch.no_grad():
     # 掃描 mixture 資料夾中的 spec 檔案
     files = sorted([f for f in os.listdir(args.mixture_folder) if f.endswith('_spec.npy')])
-    # files = files[:10]
+    files = files[:20]
     print(f"找到 {len(files)} 個檔案，開始處理...")
 
     bar = tqdm(files)
@@ -150,7 +150,7 @@ python data.py \
     --direction to_spec
 
 python inference.py \
-    --model_path svs_best_val.pth \
+    --model_path svs_400.pth \
     --mixture_folder custom_result/spec/mixture \
     --tar custom_result/spec/rm_vocal_pred \
     --vocal_solo 0
@@ -174,6 +174,18 @@ python data.py \
     --phase unet_spectrograms_high/test/mixture  \
     --tar test_results/wav
     
+---
+python inference.py \
+    --model_path svs_best_1207.pth \
+    --mixture_folder unet_spectrograms_high/test/mixture \
+    --tar test_results/spec \
+    --vocal_solo 1
+
+python data.py \
+    --direction to_wave \
+    --src test_results/spec \
+    --phase unet_spectrograms_high/test/mixture  \
+    --tar test_results/wav
 ---
 
 
