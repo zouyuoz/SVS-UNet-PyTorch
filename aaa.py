@@ -91,12 +91,13 @@ def debug_inference(model_path, spec_path):
     plt.colorbar(format='%+2.0f dB')
 
     plt.tight_layout()
-    plt.savefig('debug_mask_result_fixed.png')
-    print("Diagnosis complete! Please check 'debug_mask_result_fixed.png'.")
+    output_path = 'debug_mask_result_fixed.png'
+    plt.savefig(output_path)
+    print(f"Diagnosis complete! Please check '{output_path}'.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_path', type=str, default='svs_400.pth')
+    parser.add_argument('--model_path', type=str, default='CKPT/svs_400.pth')
     parser.add_argument('--spec_path', type=str, required=True)
     args = parser.parse_args()
     

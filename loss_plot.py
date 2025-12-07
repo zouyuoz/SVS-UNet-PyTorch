@@ -97,7 +97,7 @@ def process_and_plot_losses(file_path):
          plt.xticks(train_x_indices)
 
     # 輸出結果
-    plt.savefig('output500.png') 
+    plt.savefig('output.png') 
 
     # 打印原始數據摘要 (無中文)
     print("\n--- Data Summary ---")
@@ -108,4 +108,5 @@ def process_and_plot_losses(file_path):
 
 # --- 執行分析 ---
 if __name__ == "__main__":
-    process_and_plot_losses(TXT_FILE_NAME)
+    Path = 'LOG/' + TXT_FILE_NAME
+    process_and_plot_losses(Path)

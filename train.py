@@ -134,7 +134,7 @@ if os.path.exists(args.load_path):
 
 best_val_loss = 1.
 log_buffer = []
-log_file = 'log_1207.txt'
+log_file = 'LOG/log_1208.txt'
 scheduler = None
 start_epoch = 0
 
@@ -209,7 +209,7 @@ for ep in range(start_epoch, args.epoch):
         print(f"\n[Epoch {ep+1}] Train Loss: {avg_train_loss:.4e} | Val Loss: {avg_val_loss:.4e}")
         
         if avg_val_loss < best_val_loss:
-            model.save("svs_best_1207.pth")
+            model.save("CKPT/svs_best_1207.pth")
             
         # [新增] 觸發 Validation 時，將累積的 Buffer 寫入 log.txt
         try:
@@ -253,9 +253,9 @@ print("Finish training!")
 python train.py \
     --train_folder unet_spectrograms_high/train \
     --valid_folder unet_spectrograms_high/valid \
-    --save_path svs_1207.ckpt \
+    --save_path CKPT/svs_1207.ckpt \
     --batch_size 32 \
     --epoch 500 \
     --val_interval 20 \
-    --load_path svs_1207.ckpt
+    --load_path CKPT/svs_1207.ckpt
 """

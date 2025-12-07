@@ -135,7 +135,7 @@ python data.py \
     --direction to_spec
 
 python inference.py \
-    --model_path svs_400.pth \
+    --model_path CKPT/svs_400.pth \
     --mixture_folder custom_result/spec/mixture \
     --tar custom_result/spec/rm_vocal_pred \
     --vocal_solo 0
@@ -148,7 +148,7 @@ python data.py \
 
 ---
 python inference.py \
-    --model_path svs_1207.ckpt \
+    --model_path CKPT/svs_1207.ckpt \
     --mixture_folder unet_spectrograms_high/test/mixture \
     --tar test_results/spec \
     --vocal_solo 1
