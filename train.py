@@ -135,13 +135,39 @@ if os.path.exists(args.load_path):
 best_val_loss = 1.
 log_buffer = []
 log_file = 'log_1207.txt'
+scheduler = None
+start_epoch = 0
+
+# 這是給您參考的載入寫法 (放在 train.py 初始化階段)
+if os.path.exists(args.load_path):
+    print(f"Loading checkpoint from {args.load_path}")
+    checkpoint = torch.load(args.load_path, map_location=device)
+    
+    # 1. 載入模型權重
+    model.load_state_dict(checkpoint['model_state_dict'])
+    
+    # 2. 載入優化器狀態
+    if 'optim' in checkpoint:
+        model.optim.load_state_dict(checkpoint['optim'])
+        
+    # 3. 載入 Epoch (如果要接續訓練)
+    start_epoch = checkpoint.get('epoch', 0)
+    
+    # 4. 載入 Scheduler (如果有)
+    if scheduler is not None and 'scheduler' in checkpoint and checkpoint['scheduler'] is not None:
+        scheduler.load_state_dict(checkpoint['scheduler'])
+        
+    # 5. 載入 Loss 紀錄 (選用)
+    for key in checkpoint:
+        if key.startswith('loss_list'):
+            setattr(model, key, checkpoint[key])
 
 # =========================================================================================
 # Main Loop
 # =========================================================================================
-print(f"Start training for {args.epoch} epochs...")
+print(f"Start training for {args.epoch - start_epoch} epochs...")
 
-for ep in range(args.epoch):
+for ep in range(start_epoch, args.epoch):
     # --- Training Phase ---
     model.train()
     loop = tqdm(train_loader, desc=f"Epoch {ep+1}/{args.epoch} [Train]", leave=False)
@@ -198,8 +224,22 @@ for ep in range(args.epoch):
         # 平常只印 Train Loss
         print(f"Epoch {ep+1} Avg Loss: {avg_train_loss:.4e}")
 
-    # Save Model
-    model.save(args.save_path)
+    # [修改] 儲存 Checkpoint (取代原本的 model.save)
+    checkpoint = {
+        'epoch': ep + 1,                           # 當前訓練到的 Epoch
+        'model_state_dict': model.state_dict(),    # 模型權重
+        'optim': model.optim.state_dict(),         # 優化器狀態 (包含 momentum 等資訊)
+        'scheduler': scheduler.state_dict() if scheduler is not None else None, # 排程器狀態
+    }
+
+    # 為了保持與舊版相容，我們也把 loss history 存進去
+    for key in model.__dict__:
+        if key.startswith('loss_list'):
+            checkpoint[key] = getattr(model, key)
+
+    # 執行儲存
+    torch.save(checkpoint, args.save_path)
+    # print(f"Checkpoint saved: {args.save_path} (Epoch {ep+1})")
 
 if log_buffer:
     with open(log_file, 'a') as f:
@@ -213,8 +253,9 @@ print("Finish training!")
 python train.py \
     --train_folder unet_spectrograms_high/train \
     --valid_folder unet_spectrograms_high/valid \
-    --save_path svs_1207.pth \
+    --save_path svs_1207.ckpt \
     --batch_size 32 \
     --epoch 500 \
-    --val_interval 20
+    --val_interval 20 \
+    --load_path svs_1207.ckpt
 """

@@ -4,8 +4,7 @@ unet_spectrograms_high/
 __pycache__/
 .python-version
 
-*.pt
-*.pth
+CKPT/
 
 custom_song/
 custom_result/
@@ -14,4 +13,4 @@ test_results/
 *.png
 *.jpg
 
-*.txt
+LOG/

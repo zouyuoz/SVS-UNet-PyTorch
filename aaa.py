@@ -96,7 +96,7 @@ def debug_inference(model_path, spec_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_path', type=str, default='svs_best_500.pth')
+    parser.add_argument('--model_path', type=str, default='svs_400.pth')
     parser.add_argument('--spec_path', type=str, required=True)
     args = parser.parse_args()
     
