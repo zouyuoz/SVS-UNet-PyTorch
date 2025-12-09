@@ -111,7 +111,7 @@ def debug_inference(model_path, spec_path):
     diff_db = pred_vocal_db - gt_vocal_db
 
     # 6. 畫圖
-    fig = plt.figure(figsize=(14, 6))
+    fig = plt.figure(figsize=(15, 6))
     gs = fig.add_gridspec(3, 1)
 
     aspect_ratio = 'auto'
@@ -164,7 +164,7 @@ def debug_inference(model_path, spec_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_path', type=str, default='CKPT/svs_1209_L1.ckpt')
+    parser.add_argument('--model_path', type=str, default='CKPT/svs_best_1209_L1.pth')
     parser.add_argument('--spec_path', type=str, required=True, help="Path to the MIXTURE spectrogram")
     args = parser.parse_args()
     

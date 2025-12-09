@@ -151,8 +151,6 @@ class UNet(nn.Module):
         self.crit = nn.L1Loss()
         # self.crit = nn.MSELoss()
         # self.crit = nn.SmoothL1Loss()
-        
-        # We handle device movement externally or via .to(device)
 
     # ==============================================================================
     #   IO
@@ -254,8 +252,11 @@ class UNet(nn.Module):
         
         loss_v = self.crit(pred_vocal, voc)
         loss_a = self.crit(pred_accomp, target_accomp)
-        
         loss = loss_v + loss_a
-        self.loss_list_vocal.append(loss.item())
+        
+        self.loss_list_vocal.append(loss_v.item())
+        self.loss_list_accomp.append(loss_a.item())
+        self.loss_list_total.append(loss.item())
+        
         loss.backward()
         self.optim.step()

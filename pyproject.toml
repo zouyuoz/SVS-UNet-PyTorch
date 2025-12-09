@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "argparse>=1.4.0",
+    "auraloss>=0.4.0",
     "librosa==0.10.1",
     "matplotlib>=3.10.7",
     "mir-eval>=0.8.2",

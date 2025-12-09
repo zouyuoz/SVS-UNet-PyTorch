@@ -135,7 +135,7 @@ python data.py \
     --direction to_spec
 
 python inference.py \
-    --model_path CKPT/svs_1209_L1.ckpt \
+    --model_path CKPT/svs_best_1209_L1.pth \
     --mixture_folder custom_result/spec/mixture \
     --tar custom_result/spec/pred_spec \
     --vocal_solo 0
@@ -161,7 +161,7 @@ python data.py \
 
 --- LOW ---
 python inference.py \
-    --model_path CKPT/svs_1209_L1.ckpt \
+    --model_path CKPT/svs_best_1209_L1.pth \
     --mixture_folder unet_spectrograms/test/mixture \
     --tar test_results/spec \
     --vocal_solo 1

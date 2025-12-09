@@ -90,7 +90,7 @@ class SpectrogramDataset(Data.Dataset):
 parser = argparse.ArgumentParser()
 parser.add_argument('--train_folder', type = str, default = './data/vocals')
 parser.add_argument('--load_path'   , type = str, default = 'result.pth')
-parser.add_argument('--save_path'   , type = str, default = 'result.pth')
+parser.add_argument('--label'       , type = str, required = True)
 parser.add_argument('--epoch'       , type = int, default = 2)
 parser.add_argument('--batch_size'  , type = int, default = 2)
 
@@ -98,9 +98,15 @@ parser.add_argument('--valid_folder', type = str, default = 'unet_spectrograms/v
 parser.add_argument('--val_interval', type = int, default = 20, help="每幾輪做一次驗證")
 
 args = parser.parse_args()
+
+log_file = f'LOG/log_{args.label}.txt'
+best_weight = f'CKPT/svs_best_{args.label}.pth'
+ckpt_weight = f'CKPT/svs_{args.label}.pth'
+
 # =========================================================================================
 # 2. Training Setup
 # =========================================================================================
+
 # Train Loader
 train_dataset = SpectrogramDataset(args.train_folder)
 train_loader = Data.DataLoader(
@@ -135,7 +141,6 @@ if os.path.exists(args.load_path):
 
 best_val_loss = 100.
 log_buffer = []
-log_file = 'LOG/log_1209_L1.txt'
 scheduler = None
 start_epoch = 0
 
@@ -164,8 +169,9 @@ if os.path.exists(args.load_path):
             setattr(model, key, checkpoint[key])
 
 # =========================================================================================
-# Main Loop
+# 3. Main Loop
 # =========================================================================================
+
 print(f"Start training for {args.epoch - start_epoch} epochs...")
 
 for ep in range(start_epoch, args.epoch):
@@ -180,7 +186,7 @@ for ep in range(start_epoch, args.epoch):
         
         # 取得當前 batch loss
         loss_dict = model.getLoss()
-        current_loss = loss_dict.get('loss_list_total')
+        current_loss = loss_dict.get('loss_list_total', 0)
         train_loss_sum += current_loss
         
         loop.set_postfix(loss=current_loss)
@@ -202,15 +208,15 @@ for ep in range(start_epoch, args.epoch):
                 
                 # 手動計算 Loss (因為 model.backward 是訓練用的)
                 mask = model(mix)
-                loss = model.getLoss().get('loss_list_total')
-                val_loss_sum += loss.item()
+                loss = model.getLoss().get('loss_list_total', 0)
+                val_loss_sum += loss
         
         avg_val_loss = val_loss_sum / len(valid_loader)
         log_buffer.append(f"Val {avg_val_loss}\n")
         print(f"\n[Epoch {ep+1}] Train Loss: {avg_train_loss:.4e} | Val Loss: {avg_val_loss:.4e}")
         
         if avg_val_loss < best_val_loss:
-            model.save("CKPT/svs_best_1209_L1.pth")
+            model.save(best_weight)
             
         # [新增] 觸發 Validation 時，將累積的 Buffer 寫入 log.txt
         try:
@@ -239,8 +245,7 @@ for ep in range(start_epoch, args.epoch):
             checkpoint[key] = getattr(model, key)
 
     # 執行儲存
-    torch.save(checkpoint, args.save_path)
-    # print(f"Checkpoint saved: {args.save_path} (Epoch {ep+1})")
+    torch.save(checkpoint, ckpt_weight)
 
 if log_buffer:
     with open(log_file, 'a') as f:
@@ -254,11 +259,10 @@ print("Finish training!")
 python train.py \
     --train_folder unet_spectrograms/train \
     --valid_folder unet_spectrograms/valid \
-    --save_path CKPT/svs_1209_L1.ckpt \
+    --label L1_and_MRSTFTLoss.ckpt \
     --batch_size 32 \
-    --epoch 300 \
+    --epoch 400 \
     --val_interval 20 \
-    --load_path CKPT/svs_1209_L1.ckpt
     
 想法：
 
