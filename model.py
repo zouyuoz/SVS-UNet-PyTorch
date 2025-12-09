@@ -47,6 +47,30 @@ class LogL1Loss(nn.Module):
             return loss.sum()
         return loss
 
+class DBLoss(nn.Module):
+    def __init__(self, eps=1e-8, reduction='mean'):
+        super(DBLoss, self).__init__()
+        self.eps = eps
+        self.reduction = reduction
+
+    def forward(self, pred, target):
+        # 1. 加上 eps 避免 log(0)
+        pred_safe = torch.clamp(pred, min=self.eps)
+        target_safe = torch.clamp(target, min=self.eps)
+
+        # 2. 轉換成對數
+        pred_db = torch.log(pred_safe)
+        target_db = torch.log(target_safe)
+
+        # 3. 計算 L1 Loss in dB domain 乘上
+        loss = torch.abs(pred_db - target_db)
+
+        if self.reduction == 'mean':
+            return loss.mean()
+        elif self.reduction == 'sum':
+            return loss.sum()
+        return loss
+
 class UNet(nn.Module):
     def __init__(self):
         super(UNet, self).__init__()
@@ -55,32 +79,33 @@ class UNet(nn.Module):
         self.conv1 = nn.Sequential(
             nn.Conv2d(1, 16, kernel_size=(5, 5), stride=(2, 2), padding=2),
             nn.BatchNorm2d(16),
-            nn.LeakyReLU(True)
+            # nn.PReLU(init=0.2)
+            nn.LeakyReLU(inplace=True, negative_slope=0.2)
         )
         self.conv2 = nn.Sequential(
             nn.Conv2d(16, 32, kernel_size=(5, 5), stride=(2, 2), padding=2),
             nn.BatchNorm2d(32),
-            nn.LeakyReLU(True)
+            nn.LeakyReLU(inplace=True, negative_slope=0.2)
         )
         self.conv3 = nn.Sequential(
             nn.Conv2d(32, 64, kernel_size=(5, 5), stride=(2, 2), padding=2),
             nn.BatchNorm2d(64),
-            nn.LeakyReLU(True)
+            nn.LeakyReLU(inplace=True, negative_slope=0.2)
         )
         self.conv4 = nn.Sequential(
             nn.Conv2d(64, 128, kernel_size=(5, 5), stride=(2, 2), padding=2),
             nn.BatchNorm2d(128),
-            nn.LeakyReLU(True)
+            nn.LeakyReLU(inplace=True, negative_slope=0.2)
         )
         self.conv5 = nn.Sequential(
             nn.Conv2d(128, 256, kernel_size=(5, 5), stride=(2, 2), padding=2),
             nn.BatchNorm2d(256),
-            nn.LeakyReLU(True)
+            nn.LeakyReLU(inplace=True, negative_slope=0.2)
         )
         self.conv6 = nn.Sequential(
             nn.Conv2d(256, 512, kernel_size=(5, 5), stride=(2, 2), padding=2),
             nn.BatchNorm2d(512),
-            nn.LeakyReLU(True)
+            nn.LeakyReLU(inplace=True, negative_slope=0.2)
         )
         
         # Deconv layers
@@ -118,11 +143,13 @@ class UNet(nn.Module):
 
         # Define loss list
         self.loss_list_vocal = []
+        self.loss_list_accomp = []
+        self.loss_list_total = []
         
-        # Define the criterion and optimizer
-        self.optim = torch.optim.Adam(self.parameters(), lr=1e-4)
-        self.crit = LogL1Loss(alpha=128.)
-        # self.crit = nn.L1Loss()
+        self.optim = torch.optim.Adam(self.parameters(), lr=5e-3)
+        # self.crit = LogL1Loss(alpha=64.)
+        self.crit = nn.L1Loss()
+        # self.crit = nn.MSELoss()
         # self.crit = nn.SmoothL1Loss()
         
         # We handle device movement externally or via .to(device)
@@ -208,7 +235,7 @@ class UNet(nn.Module):
         
         deconv6_out = self.deconv6(torch.cat([deconv5_out, conv1_out], 1), output_size=mix.size())
         
-        out = torch.sigmoid(deconv6_out) # Updated from F.sigmoid
+        out = torch.sigmoid(deconv6_out)
         return out
 
     def backward(self, mix, voc):
@@ -220,7 +247,15 @@ class UNet(nn.Module):
         """
         self.optim.zero_grad()
         msk = self.forward(mix)
-        loss = self.crit(msk * mix, voc)
+        
+        pred_vocal = msk * mix
+        pred_accomp = (1 - msk) * mix
+        target_accomp = torch.clamp(mix - voc, min=0.0)
+        
+        loss_v = self.crit(pred_vocal, voc)
+        loss_a = self.crit(pred_accomp, target_accomp)
+        
+        loss = loss_v + loss_a
         self.loss_list_vocal.append(loss.item())
         loss.backward()
         self.optim.step()

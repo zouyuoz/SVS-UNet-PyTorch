@@ -135,18 +135,18 @@ python data.py \
     --direction to_spec
 
 python inference.py \
-    --model_path CKPT/svs_400.pth \
+    --model_path CKPT/svs_1209_L1.ckpt \
     --mixture_folder custom_result/spec/mixture \
-    --tar custom_result/spec/rm_vocal_pred \
-    --vocal_solo 1
+    --tar custom_result/spec/pred_spec \
+    --vocal_solo 0
 
 python data.py \
     --direction to_wave \
-    --src custom_result/spec/rm_vocal_pred \
+    --src custom_result/spec/pred_spec \
     --phase custom_result/spec/mixture \
     --tar custom_result/wav
 
----
+--- HIGH ---
 python inference.py \
     --model_path CKPT/svs_1208.ckpt \
     --mixture_folder unet_spectrograms_high/test/mixture \
@@ -158,7 +158,19 @@ python data.py \
     --src test_results/spec \
     --phase unet_spectrograms_high/test/mixture  \
     --tar test_results/wav
----
+
+--- LOW ---
+python inference.py \
+    --model_path CKPT/svs_1209_L1.ckpt \
+    --mixture_folder unet_spectrograms/test/mixture \
+    --tar test_results/spec \
+    --vocal_solo 1
+
+python data.py \
+    --direction to_wave \
+    --src test_results/spec \
+    --phase unet_spectrograms/test/mixture  \
+    --tar test_results/wav
 
 ---
 

@@ -172,14 +172,14 @@ else:
 
 python data.py \
     --direction to_wave \
-    --src unet_spectrograms_high/test/mixture \
-    --phase unet_spectrograms_high/test/mixture  \
-    --tar test_results/gt_mixture_wav_high
+    --src unet_spectrograms/test/mixture \
+    --phase unet_spectrograms/test/mixture  \
+    --tar test_results/gt_mixture_wav_low
 
 python data.py \
     --direction to_wave \
-    --src unet_spectrograms_high/test/vocal \
-    --phase unet_spectrograms_high/test/mixture  \
-    --tar test_results/gt_vocal_wav_high
+    --src unet_spectrograms/test/vocal \
+    --phase unet_spectrograms/test/mixture  \
+    --tar test_results/gt_vocal_wav_low
 
 """

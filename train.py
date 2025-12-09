@@ -133,9 +133,9 @@ if os.path.exists(args.load_path):
     model.load(args.load_path)
     print(f"Loaded checkpoint from {args.load_path}")
 
-best_val_loss = 1.
+best_val_loss = 100.
 log_buffer = []
-log_file = 'LOG/log_1208.txt'
+log_file = 'LOG/log_1209_L1.txt'
 scheduler = None
 start_epoch = 0
 
@@ -180,7 +180,7 @@ for ep in range(start_epoch, args.epoch):
         
         # 取得當前 batch loss
         loss_dict = model.getLoss()
-        current_loss = loss_dict.get('loss_list_vocal', 0)
+        current_loss = loss_dict.get('loss_list_total')
         train_loss_sum += current_loss
         
         loop.set_postfix(loss=current_loss)
@@ -202,7 +202,7 @@ for ep in range(start_epoch, args.epoch):
                 
                 # 手動計算 Loss (因為 model.backward 是訓練用的)
                 mask = model(mix)
-                loss = model.crit(mask * mix, voc)
+                loss = model.getLoss().get('loss_list_total')
                 val_loss_sum += loss.item()
         
         avg_val_loss = val_loss_sum / len(valid_loader)
@@ -210,7 +210,7 @@ for ep in range(start_epoch, args.epoch):
         print(f"\n[Epoch {ep+1}] Train Loss: {avg_train_loss:.4e} | Val Loss: {avg_val_loss:.4e}")
         
         if avg_val_loss < best_val_loss:
-            model.save("CKPT/svs_best_1207.pth")
+            model.save("CKPT/svs_best_1209_L1.pth")
             
         # [新增] 觸發 Validation 時，將累積的 Buffer 寫入 log.txt
         try:
@@ -252,13 +252,13 @@ print("Finish training!")
 """
 1208 midnight:
 python train.py \
-    --train_folder unet_spectrograms_high/train \
-    --valid_folder unet_spectrograms_high/valid \
-    --save_path CKPT/svs_1209.ckpt \
+    --train_folder unet_spectrograms/train \
+    --valid_folder unet_spectrograms/valid \
+    --save_path CKPT/svs_1209_L1.ckpt \
     --batch_size 32 \
-    --epoch 100 \
+    --epoch 300 \
     --val_interval 20 \
-    --load_path CKPT/svs_400.pth
+    --load_path CKPT/svs_1209_L1.ckpt
     
 想法：
 
