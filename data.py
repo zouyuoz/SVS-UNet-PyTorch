@@ -168,21 +168,18 @@ else:
     print("未知的方向，請使用 to_spec 或 to_wave")
     
 """
-python data.py \
---direction to_wave \
---src   unet_spectrograms/test/vocal \
---phase unet_spectrograms/test/mixture  \
---tar test_results/gt_vocal_wav_low \
---hop_size 768 \
---sr 8192
+轉成 gt wav
 
 python data.py \
---direction to_wave \
---src   unet_spectrograms/test/mixture \
---phase unet_spectrograms/test/mixture  \
---tar test_results/gt_mixture_wav_low \
---hop_size 768 \
---sr 8192
+    --direction to_wave \
+    --src unet_spectrograms_high/test/mixture \
+    --phase unet_spectrograms_high/test/mixture  \
+    --tar test_results/gt_mixture_wav_high
 
+python data.py \
+    --direction to_wave \
+    --src unet_spectrograms_high/test/vocal \
+    --phase unet_spectrograms_high/test/mixture  \
+    --tar test_results/gt_vocal_wav_high
 
 """

@@ -10,6 +10,42 @@ import os
     @Reference: https://github.com/Jeongseungwoo/Singing-Voice-Separation
     @Revise: SunnerLi
 """
+class SqrtL1Loss(nn.Module):
+    def __init__(self, eps=1e-6, reduction='mean'):
+        super(SqrtL1Loss, self).__init__()
+        self.eps = eps
+        self.reduction = reduction
+
+    def forward(self, pred, target):
+        
+        l1 = torch.abs(pred - target)
+        loss = torch.sqrt(l1 + self.eps)
+        
+        if self.reduction == 'mean':
+            return loss.mean()
+        elif self.reduction == 'sum':
+            return loss.sum()
+        return loss
+
+class LogL1Loss(nn.Module):
+    def __init__(self, alpha=1.0, reduction='mean'):
+        super(LogL1Loss, self).__init__()
+        self.alpha = alpha
+        self.reduction = reduction
+
+    def forward(self, pred, target):
+        
+        l1 = torch.abs(pred - target)
+        
+        # y = log(alpha * x + 1)
+        #  log1p(x) is equivalent to log(x + 1)
+        loss = torch.log1p(self.alpha * l1)
+        
+        if self.reduction == 'mean':
+            return loss.mean()
+        elif self.reduction == 'sum':
+            return loss.sum()
+        return loss
 
 class UNet(nn.Module):
     def __init__(self):
@@ -85,7 +121,8 @@ class UNet(nn.Module):
         
         # Define the criterion and optimizer
         self.optim = torch.optim.Adam(self.parameters(), lr=1e-4)
-        self.crit = nn.L1Loss()
+        self.crit = LogL1Loss(alpha=128.)
+        # self.crit = nn.L1Loss()
         # self.crit = nn.SmoothL1Loss()
         
         # We handle device movement externally or via .to(device)

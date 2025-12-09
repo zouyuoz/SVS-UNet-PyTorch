@@ -138,7 +138,7 @@ python inference.py \
     --model_path CKPT/svs_400.pth \
     --mixture_folder custom_result/spec/mixture \
     --tar custom_result/spec/rm_vocal_pred \
-    --vocal_solo 0
+    --vocal_solo 1
 
 python data.py \
     --direction to_wave \
@@ -148,7 +148,7 @@ python data.py \
 
 ---
 python inference.py \
-    --model_path CKPT/svs_1207.ckpt \
+    --model_path CKPT/svs_1208.ckpt \
     --mixture_folder unet_spectrograms_high/test/mixture \
     --tar test_results/spec \
     --vocal_solo 1
@@ -159,19 +159,6 @@ python data.py \
     --phase unet_spectrograms_high/test/mixture  \
     --tar test_results/wav
 ---
-轉成 gt wav
-
-python data.py \
-    --direction to_wave \
-    --src unet_spectrograms_high/test/mixture \
-    --phase unet_spectrograms_high/test/mixture  \
-    --tar test_results/gt_mixture_wav_high
-
-python data.py \
-    --direction to_wave \
-    --src unet_spectrograms_high/test/vocal \
-    --phase unet_spectrograms_high/test/mixture  \
-    --tar test_results/gt_vocal_wav_high
 
 ---
 

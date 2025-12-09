@@ -131,6 +131,7 @@ model.to(device)
 
 if os.path.exists(args.load_path):
     model.load(args.load_path)
+    print(f"Loaded checkpoint from {args.load_path}")
 
 best_val_loss = 1.
 log_buffer = []
@@ -249,13 +250,16 @@ if log_buffer:
 print("Finish training!")
 
 """
-1207 midnight:
+1208 midnight:
 python train.py \
     --train_folder unet_spectrograms_high/train \
     --valid_folder unet_spectrograms_high/valid \
-    --save_path CKPT/svs_1207.ckpt \
+    --save_path CKPT/svs_1209.ckpt \
     --batch_size 32 \
-    --epoch 500 \
+    --epoch 100 \
     --val_interval 20 \
-    --load_path CKPT/svs_1207.ckpt
+    --load_path CKPT/svs_400.pth
+    
+想法：
+
 """

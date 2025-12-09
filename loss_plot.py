@@ -5,7 +5,7 @@ import sys
 
 # --- 設定輸入檔案名稱 ---
 # 假設您的檔案名為 losses.txt
-TXT_FILE_NAME = 'log_1207.txt'
+TXT_FILE_NAME = 'log_1208.txt'
 
 # --- 模擬數據生成結束 ---
 def process_and_plot_losses(file_path):
@@ -19,7 +19,7 @@ def process_and_plot_losses(file_path):
     train_losses = []
     val_losses = []
     val_x_indices = []
-    current_x_index = 0
+    current_x_index = 1
 
     # --- 數據解析與對齊 ---
     try:
@@ -78,12 +78,12 @@ def process_and_plot_losses(file_path):
     train_x_indices = range(len(train_losses))
 
     # 繪製 Loss 數據
-    plt.plot(train_x_indices, train_losses, linestyle='-', color='blue', label='Train Loss', linewidth=1.5)
+    plt.plot(train_x_indices, train_losses, linestyle='-', color='blue', label='Train Loss', linewidth=1)
     
     # 繪製 Val Loss 數據
     if val_losses:
         # 使用 val_x_indices 確保 Val Loss 與對應的 Loss 點對齊
-        plt.plot(val_x_indices, val_losses, linestyle='--', color='red', label='Val Loss', marker='o', markersize=5)
+        plt.plot(val_x_indices, val_losses, linestyle='--', color='red', label='Val Loss', marker='o', markersize=3)
         
     # 設定圖表屬性
     plt.title('Training and Validation Loss Over Steps', fontsize=14)

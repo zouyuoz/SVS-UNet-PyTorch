@@ -33,10 +33,21 @@ def num2str(n):
 # self.crit = nn.L1Loss()
 
 # --- 1207 Params ---
-WINDOW_SIZE = 1024
-HOP_SIZE = 768
+# WINDOW_SIZE = 1024
+# HOP_SIZE = 768
+# SAMPLE_RATE = 44100
+# INPUT_LEN = 512
+# SAMPLES_PER_SONG = 64
+# batch_size = 32
+# lr = 1e-4
+# epoch = 500
+# self.crit = nn.L1Loss()
+
+# --- 1207 Params ---
+WINDOW_SIZE = 2048
+HOP_SIZE = 1024
 SAMPLE_RATE = 44100
-INPUT_LEN = 512
+INPUT_LEN = 360
 SAMPLES_PER_SONG = 64
 # batch_size = 32
 # lr = 1e-4
