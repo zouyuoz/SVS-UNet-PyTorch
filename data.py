@@ -6,7 +6,7 @@ import os
 import soundfile as sf
 from tqdm import tqdm
 import warnings
-from utils import *
+from config import *
 
 # 忽略不必要的警告
 warnings.filterwarnings("ignore")
@@ -106,9 +106,7 @@ if args.direction == 'to_spec':
                     
                     save_name_base = f"{num2str(audio_idx)}_{song_name}"
                     np.save(os.path.join(args.tar, target_folder, f"{save_name_base}_spec.npy"), spec)
-                    # 只有 mixture 需要存 phase 供還原使用 (或者全部存也可以)
-                    if wav_file == 'mixture.wav':
-                        np.save(os.path.join(args.tar, target_folder, f"{save_name_base}_phase.npy"), phase)
+                    np.save(os.path.join(args.tar, target_folder, f"{save_name_base}_phase.npy"), phase)
 
         except Exception as e:
             print(f"Error processing {song_name}: {e}")

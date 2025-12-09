@@ -4,7 +4,7 @@ import argparse
 import torch
 import os
 from tqdm import tqdm
-from utils import *
+from config import *
 
 def num2str(n):
     return str(n).zfill(4)
@@ -170,7 +170,7 @@ python data.py \
 +----------------------+
 
 python inference.py \
-    --model_path CKPT/svs_best_L1_ft16.pth \
+    --model_path CKPT/svs_L1+SL_test.pth \
     --mixture_folder unet_spectrograms/test/mixture \
     --tar test_results/spec \
     --vocal_solo 1

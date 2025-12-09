@@ -164,7 +164,7 @@ class UNet(nn.Module):
         self.loss_list_accomp = []
         self.loss_list_total = []
         
-        self.optim = torch.optim.Adam(self.parameters(), lr=1e-3)
+        self.optim = torch.optim.Adam(self.parameters(), lr=5e-3)
         # self.crit = LogL1Loss(alpha=64.)
         self.crit = nn.L1Loss()
         # self.crit = nn.MSELoss()
