@@ -3,6 +3,7 @@ import torch.nn as nn
 import numpy as np
 import torch
 import os
+import auraloss
 
 """
     This script define the structure and update schema of U-Net
@@ -71,6 +72,24 @@ class DBLoss(nn.Module):
             return loss.sum()
         return loss
 
+class VocalPlusAccompL1Loss(nn.Module):
+    def __init__(self):
+        super().__init__()
+        
+    def forward(self, pred_spec, target_spec):
+        """
+        pred_vocal = msk * mix
+        pred_accomp = (1 - msk) * mix
+        target_accomp = torch.clamp(mix - voc, min=0.0)
+        
+        loss_v = self.crit(pred_vocal, voc)
+        loss_a = self.crit(pred_accomp, target_accomp)
+        loss = loss_v + loss_a
+        """
+        # 記得加 log 以模擬人耳聽感，並處理極小值
+        loss = torch.abs(torch.log1p(pred_spec) - torch.log1p(target_spec))
+        return loss.mean()
+
 class UNet(nn.Module):
     def __init__(self):
         super(UNet, self).__init__()
@@ -79,7 +98,6 @@ class UNet(nn.Module):
         self.conv1 = nn.Sequential(
             nn.Conv2d(1, 16, kernel_size=(5, 5), stride=(2, 2), padding=2),
             nn.BatchNorm2d(16),
-            # nn.PReLU(init=0.2)
             nn.LeakyReLU(inplace=True, negative_slope=0.2)
         )
         self.conv2 = nn.Sequential(
@@ -146,7 +164,7 @@ class UNet(nn.Module):
         self.loss_list_accomp = []
         self.loss_list_total = []
         
-        self.optim = torch.optim.Adam(self.parameters(), lr=5e-3)
+        self.optim = torch.optim.Adam(self.parameters(), lr=1e-3)
         # self.crit = LogL1Loss(alpha=64.)
         self.crit = nn.L1Loss()
         # self.crit = nn.MSELoss()

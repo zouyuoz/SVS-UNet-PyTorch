@@ -7,6 +7,7 @@ import os
 from tqdm import tqdm
 import random
 from utils import *
+import auraloss
 
 """
     SVS-UNet Training Script with Validation
@@ -16,6 +17,8 @@ from utils import *
 # Determine device
 device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 print(f"Using device: {device}")
+mrstft_loss = auraloss.freq.MRSTFTLoss().to(device)
+alpha = 0.1
 
 # =========================================================================================
 # Dataset Definition
@@ -143,6 +146,7 @@ best_val_loss = 100.
 log_buffer = []
 scheduler = None
 start_epoch = 0
+optimizer = model.optimizer
 
 # 這是給您參考的載入寫法 (放在 train.py 初始化階段)
 if os.path.exists(args.load_path):
@@ -194,7 +198,7 @@ for ep in range(start_epoch, args.epoch):
     avg_train_loss = train_loss_sum / len(train_loader)
     log_buffer.append(f"{avg_train_loss}\n")
     
-    # --- Validation Phase (Every 10 epochs) ---
+    # --- Validation Phase (Every 20 epochs) ---
     if valid_loader and (ep + 1) % args.val_interval == 0:
         model.eval() # 切換到評估模式 (關閉 Dropout, BatchNorm 變動)
         val_loss_sum = 0
@@ -205,11 +209,9 @@ for ep in range(start_epoch, args.epoch):
             
             for mix, voc in val_loop:
                 mix, voc = mix.to(device), voc.to(device)
-                
-                # 手動計算 Loss (因為 model.backward 是訓練用的)
                 mask = model(mix)
-                loss = model.getLoss().get('loss_list_total', 0)
-                val_loss_sum += loss
+                loss_tensor = model.crit(mask * mix, voc) + model.crit((1 - mask) * mix, torch.clamp(mix - voc, min=0.0))
+                val_loss_sum += loss_tensor.item()
         
         avg_val_loss = val_loss_sum / len(valid_loader)
         log_buffer.append(f"Val {avg_val_loss}\n")
@@ -259,10 +261,11 @@ print("Finish training!")
 python train.py \
     --train_folder unet_spectrograms/train \
     --valid_folder unet_spectrograms/valid \
-    --label L1_and_MRSTFTLoss.ckpt \
-    --batch_size 32 \
-    --epoch 400 \
+    --label L1_ft16 \
+    --batch_size 16 \
+    --epoch 500 \
     --val_interval 20 \
+    --load_path CKPT/svs_1209_L1.ckpt
     
 想法：
 

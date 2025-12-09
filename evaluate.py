@@ -1,126 +1,190 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import os
-import glob
-import soundfile as sf
-import mir_eval
-import numpy as np
-from tqdm import tqdm
 import argparse
-from concurrent.futures import ProcessPoolExecutor
+import glob
+import numpy as np
+import librosa
+import mir_eval
+import csv
+import warnings
 
-def evaluate_one_song(args):
+warnings.filterwarnings("ignore")
+
+def load_mono_audio(path):
     """
-    單首歌曲的評估函式 (為了讓多行程調用，必須獨立出來)
+    讀取 wav 轉為 mono 保持原始取樣率。
+    回傳: waveform (np.ndarray, shape (T,)), sr
     """
-    est_path, ref_folder, mix_folder = args
-    
-    basename = os.path.basename(est_path)
-    ref_path = os.path.join(ref_folder, basename)
-    mix_path = os.path.join(mix_folder, basename)
-    
-    if not os.path.exists(ref_path) or not os.path.exists(mix_path):
-        return None  # 跳過找不到檔案的
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"File not found: {path}")
+    y, sr = librosa.load(path, sr=None, mono=True)
+    return y, sr
 
-    try:
-        # 讀取音訊
-        y_est_voc, sr = sf.read(est_path)
-        y_ref_voc, _  = sf.read(ref_path)
-        y_mix, _      = sf.read(mix_path)
 
-        # 確保長度一致
-        min_len = min(len(y_est_voc), len(y_ref_voc), len(y_mix))
-        y_est_voc = y_est_voc[:min_len]
-        y_ref_voc = y_ref_voc[:min_len]
-        y_mix     = y_mix[:min_len]
+def compute_metrics_for_track(mix_path, vocal_ref_path, vocal_est_path):
+    """
+    對單一 track 計算:
+        - SDR, SIR, SAR (for vocal)
+        - NSDR (normalized SDR, 相對於 mixture)
+    """
 
-        # 靜音檢查 (跳過純音樂或清唱)
-        if np.sum(np.abs(y_ref_voc)) < 1e-6:
-            return None # Ref Vocal 靜音
-        
-        # 1. 準備訊號
-        y_ref_acc = y_mix - y_ref_voc
-        y_est_acc = y_mix - y_est_voc
-        
-        reference_sources = np.vstack([y_ref_voc, y_ref_acc])
-        estimated_sources = np.vstack([y_est_voc, y_est_acc])
-        
-        # === 計算 SDR (模型預測) ===
-        (sdr, sir, sar, _) = mir_eval.separation.bss_eval_sources(
-            reference_sources, 
-            estimated_sources, 
-            compute_permutation=False
+    # 讀取音訊
+    mix, sr_mix = load_mono_audio(mix_path)
+    vocal_ref, sr_ref = load_mono_audio(vocal_ref_path)
+    vocal_est, sr_est = load_mono_audio(vocal_est_path)
+
+    if not (sr_mix == sr_ref == sr_est):
+        raise ValueError(
+            f"Sample rate mismatch: mix={sr_mix}, ref={sr_ref}, est={sr_est}"
         )
-        sdr_val = sdr[0] # 取 Vocal 的 SDR
-        sir_val = sir[0]
-        sar_val = sar[0]
 
-        # === 計算 NSDR ===
-        # NSDR = SDR(預測) - SDR(混音)
-        # 我們要把 "混音" 當作 "預測結果" 丟進去算一次 Baseline SDR
-        # 假設模型什麼都沒做，預測出來的人聲 = 混音，預測出來的伴奏 = 混音
-        baseline_sources = np.vstack([y_mix, y_mix]) 
-        
-        (sdr_base, _, _, _) = mir_eval.separation.bss_eval_sources(
-            reference_sources, 
-            baseline_sources, 
-            compute_permutation=False
-        )
-        nsdr_val = sdr_val - sdr_base[0]
+    # 對齊長度
+    min_len = min(len(mix), len(vocal_ref), len(vocal_est))
+    mix = mix[:min_len]
+    vocal_ref = vocal_ref[:min_len]
+    vocal_est = vocal_est[:min_len]
 
-        return sdr_val, nsdr_val, sir_val, sar_val
+    # === 1) 構造 2-source：vocal + accomp ===
+    acc_ref = mix - vocal_ref      # 近似真實伴奏
+    acc_est = mix - vocal_est      # 近似預測伴奏
 
-    except Exception as e:
-        print(f"Error processing {basename}: {e}")
-        return None
+    # shape: (n_sources, T) = (2, T)
+    sources_ref = np.stack([vocal_ref, acc_ref], axis=0)
+    sources_est = np.stack([vocal_est, acc_est], axis=0)
 
-def evaluate_folder_parallel(ref_folder, est_folder, mix_folder, num_workers=None):
-    # 搜尋所有 wav 檔案
-    est_files = sorted(glob.glob(os.path.join(est_folder, "*.wav")))
-    
-    if len(est_files) == 0:
-        print("錯誤：找不到預測檔案。")
+    # === 2) 用 BSS_eval 計算各種指標 ===
+    sdr, sir, sar, perm = mir_eval.separation.bss_eval_sources(sources_ref, sources_est)
+
+    # perm 會告訴你哪個 est 對應哪個 ref，但這裡我們假設順序一致（vocal 在 index 0）
+    # 如果想要嚴謹一點，可以用 perm[0] 當 vocal 的 index
+    vocal_idx = int(perm[0])  # est 中對應 vocal_ref 的 index
+
+    sdr_vocal = float(sdr[vocal_idx])
+    sir_vocal = float(sir[vocal_idx])
+    sar_vocal = float(sar[vocal_idx])
+
+    # === 3) 計算 NSDR (只針對 vocal) ===
+    # NSDR = SDR(vocal_est, vocal_ref) - SDR(mix, vocal_ref)
+
+    # step 1: mixture 當成「估計的 vocal」，單 source 評估
+    s_ref_v = vocal_ref[None, :]   # (1, T)
+    mix_as_est = mix[None, :]      # (1, T)
+    sdr_mix, _, _, _ = mir_eval.separation.bss_eval_sources(s_ref_v, mix_as_est)
+    sdr_mix_vocal = float(sdr_mix[0])
+
+    nsdr_vocal = sdr_vocal - sdr_mix_vocal
+
+    return {
+        "SDR": sdr_vocal,
+        "SIR": sir_vocal,
+        "SAR": sar_vocal,
+        "NSDR": nsdr_vocal,
+    }
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Evaluate SVS results with SDR / SIR / SAR / NSDR (vocal only).")
+    parser.add_argument("--est"    , type=str, required = True , help="預測人聲 wav 檔案資料夾（你的輸出）")
+    parser.add_argument("--mix"    , type=str, required = True , help="真實 mixture wav 資料夾")
+    parser.add_argument("--ref"    , type=str, required = True , help="真實 vocal wav 資料夾")
+    parser.add_argument("--ext"    , type=str, default  = "wav", help="音檔副檔名(預設 wav)")
+    parser.add_argument("--out_csv", type=str, default  = None , help="如果指定，會把每首歌的結果寫到這個 CSV 檔")
+
+    args = parser.parse_args()
+
+    pred_dir = args.est
+    mix_dir = args.mix
+    vocal_dir = args.ref
+    ext = args.ext
+
+    # 找出所有預測人聲檔案
+    pred_files = sorted(glob.glob(os.path.join(pred_dir, f"*.{ext}")))
+    if len(pred_files) == 0:
+        print(f"[Error] No *.{ext} files found in {pred_dir}")
         return
 
-    # 準備參數列表
-    tasks = [(f, ref_folder, mix_folder) for f in est_files]
+    all_results = []
+    sdr_list, sir_list, sar_list, nsdr_list = [], [], [], []
 
-    print(f"開始多核心評估 {len(est_files)} 首歌曲...")
-    
-    results = []
-    # 使用 ProcessPoolExecutor 進行平行運算
-    # max_workers=None 會自動使用 CPU 最大核心數
-    with ProcessPoolExecutor(max_workers=num_workers) as pool:
-        # 使用 tqdm 顯示進度條
-        for res in tqdm(pool.map(evaluate_one_song, tasks), total=len(tasks)):
-            if res is not None:
-                results.append(res)
+    print("=== Start Evaluation ===")
+    print(f"#tracks = {len(pred_files)}\n")
 
-    if not results:
-        print("沒有成功評估任何歌曲。")
+    for pred_path in pred_files:
+        basename = os.path.basename(pred_path)
+        mix_path = os.path.join(mix_dir, basename)
+        vocal_ref_path = os.path.join(vocal_dir, basename)
+
+        # 檔案對不上就跳過
+        if not os.path.exists(mix_path):
+            print(f"[Warning] Mixture file not found, skip: {mix_path}")
+            continue
+        if not os.path.exists(vocal_ref_path):
+            print(f"[Warning] Vocal ref file not found, skip: {vocal_ref_path}")
+            continue
+
+        try:
+            metrics = compute_metrics_for_track(mix_path, vocal_ref_path, pred_path)
+        except Exception as e:
+            print(f"[Error] Failed on {basename}: {e}")
+            continue
+
+        track_name = os.path.splitext(basename)[0]
+
+        print(
+            f"{track_name[:20]}:\t"
+            f"SDR={metrics['SDR']:.3f} dB,\t"
+            f"SIR={metrics['SIR']:.3f} dB,\t"
+            f"SAR={metrics['SAR']:.3f} dB,\t"
+            f"NSDR={metrics['NSDR']:.3f} dB"
+        )
+
+        sdr_list.append(metrics["SDR"])
+        sir_list.append(metrics["SIR"])
+        sar_list.append(metrics["SAR"])
+        nsdr_list.append(metrics["NSDR"])
+
+        all_results.append(
+            {
+                "track": track_name,
+                "SDR": metrics["SDR"],
+                "SIR": metrics["SIR"],
+                "SAR": metrics["SAR"],
+                "NSDR": metrics["NSDR"],
+            }
+        )
+
+    if len(all_results) == 0:
+        print("\n[Error] No valid tracks evaluated.")
         return
 
-    # 轉換為 numpy array 方便計算平均
-    results = np.array(results)
-    avg_sdr = np.mean(results[:, 0])
-    avg_nsdr = np.mean(results[:, 1])
-    avg_sir = np.mean(results[:, 2])
-    avg_sar = np.mean(results[:, 3])
+    # ---- 整體平均 ----
+    mean_sdr = float(np.mean(sdr_list))
+    mean_sir = float(np.mean(sir_list))
+    mean_sar = float(np.mean(sar_list))
+    mean_nsdr = float(np.mean(nsdr_list))
 
-    print("\n====== 人聲 (Vocals) 評估結果 (平均值) ======")
-    print(f"SDR:  {avg_sdr:.4f} dB  (整體品質)")
-    print(f"NSDR: {avg_nsdr:.4f} dB (進步幅度 - Normalized SDR)")
-    print(f"SIR:  {avg_sir:.4f} dB  (分離乾淨度)")
-    print(f"SAR:  {avg_sar:.4f} dB  (無雜音程度)")
+    print("\n=== Overall Mean Metrics (vocal) ===")
+    print(f"Mean SDR : {mean_sdr:.3f} dB")
+    print(f"Mean SIR : {mean_sir:.3f} dB")
+    print(f"Mean SAR : {mean_sar:.3f} dB")
+    print(f"Mean NSDR: {mean_nsdr:.3f} dB")
+
+    # ---- 輸出到 CSV（如果有指定）----
+    if args.out_csv is not None:
+        fieldnames = ["track", "SDR", "SIR", "SAR", "NSDR"]
+        with open(args.out_csv, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            for row in all_results:
+                writer.writerow(row)
+        print(f"\n[Info] Results saved to {args.out_csv}")
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--ref', type=str, required=True, help="Ground Truth 人聲資料夾")
-    parser.add_argument('--est', type=str, required=True, help="預測結果資料夾")
-    parser.add_argument('--mix', type=str, required=True, help="原始 Mixture 資料夾")
-    parser.add_argument('--workers', type=int, default=None, help="使用的 CPU 核心數 (預設為全部)")
-    args = parser.parse_args()
-    
-    # 使用 if __name__ == '__main__' 保護，這是 multiprocessing 在 Windows/Linux 必要的
-    evaluate_folder_parallel(args.ref, args.est, args.mix, args.workers)
+    main()
+
 """
 # 範例指令
 python evaluate.py \
@@ -164,4 +228,12 @@ svs_1208:
 SDR: 3.0661 dB  (整體品質)
 SIR: 15.1832 dB  (分離乾淨度/去伴奏能力)
 SAR: 3.8998 dB  (無雜音程度/自然度)
+
+svs_L1_ft16:
+=== Overall Mean Metrics (vocal) ===
+Mean SDR : 3.595 dB
+Mean SIR : 15.544 dB
+Mean SAR : 4.244 dB
+Mean NSDR: 8.820 dB
+
 """

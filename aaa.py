@@ -117,6 +117,7 @@ def debug_inference(model_path, spec_path):
     aspect_ratio = 'auto'
     origin_set = 'lower'
     db_vmin, db_vmax = -80, 0
+    X_MAX = gt_vocal_db.shape[1]
     
     # # --- 1. Mixture ---
     # ax1 = fig.add_subplot(gs[0, 0])
@@ -149,10 +150,17 @@ def debug_inference(model_path, spec_path):
     ax5.set_title("5. Difference in dB (Pred - True) | Red: Noise (Too Loud) | Blue: Loss (Too Quiet)")
     
     diff_range = 40 
-    # [修正] 改用標準 colormap 'bwr' 避免套件缺失錯誤
     im5 = ax5.imshow(diff_db, aspect=aspect_ratio, origin=origin_set, cmap='berlin', vmin=-diff_range, vmax=diff_range)
     plt.colorbar(im5, ax=ax5, format='%+2.0f dB')
-
+    
+    tick_locations = np.arange(0, X_MAX, 60*SAMPLE_RATE/HOP_SIZE)
+    tick_labels = (tick_locations / (60*SAMPLE_RATE/HOP_SIZE)).astype(int) 
+    
+    # 3. 應用到每個 subplot
+    for ax in [ax2, ax3, ax5]:
+        ax.set_xticks(tick_locations)
+        if ax == ax5: ax.set_xticklabels(tick_labels)
+        else: ax.set_xticklabels([])
     plt.tight_layout()
     
     # 存檔
@@ -164,8 +172,8 @@ def debug_inference(model_path, spec_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_path', type=str, default='CKPT/svs_best_1209_L1.pth')
-    parser.add_argument('--spec_path', type=str, required=True, help="Path to the MIXTURE spectrogram")
+    parser.add_argument('--model_path', type=str, default='CKPT/svs_500.pth')
+    parser.add_argument('--spec_path' , type=str, required=True, help="Path to the MIXTURE spectrogram")
     args = parser.parse_args()
     
     debug_inference(args.model_path, args.spec_path)
@@ -173,4 +181,5 @@ if __name__ == "__main__":
 """
 python aaa.py --spec_path "unet_spectrograms/test/mixture/0007_Bobby Nobody - Stitch Up_spec.npy"
 python aaa.py --spec_path "unet_spectrograms/train/mixture/0007_Aimee Norwich - Child_spec.npy"
+python aaa.py --spec_path "unet_spectrograms_high/test/mixture/0007_Bobby Nobody - Stitch Up_spec.npy"
 """

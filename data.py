@@ -1,5 +1,6 @@
 import argparse
 import librosa
+import torch
 import numpy as np
 import os
 import soundfile as sf
@@ -25,6 +26,11 @@ parser.add_argument('--hop_size', type = int, default = HOP_SIZE)
 parser.add_argument('--sr',       type = int, default = SAMPLE_RATE)
 parser.add_argument('--direction',            default = "to_spec", choices = ["to_spec", "to_wave"])
 args = parser.parse_args()
+
+# # 準備 PyTorch 設備與窗函數
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# # 建立 Hann Window (與 librosa 預設一致)，並移至對應設備
+# torch_window = torch.hann_window(args.win_size).to(device)
 
 # =========================================================================================
 # 2. 轉換邏輯
@@ -172,14 +178,14 @@ else:
 
 python data.py \
     --direction to_wave \
-    --src unet_spectrograms/test/mixture \
-    --phase unet_spectrograms/test/mixture  \
-    --tar test_results/gt_mixture_wav_low
+    --src   unet_spectrograms_high/test/mixture \
+    --phase unet_spectrograms_high/test/mixture  \
+    --tar test_results/gt_mixture_wav_high
 
 python data.py \
     --direction to_wave \
-    --src unet_spectrograms/test/vocal \
-    --phase unet_spectrograms/test/mixture  \
-    --tar test_results/gt_vocal_wav_low
+    --src   unet_spectrograms_high/test/vocal \
+    --phase unet_spectrograms_high/test/mixture  \
+    --tar test_results/gt_vocal_wav_high
 
 """
