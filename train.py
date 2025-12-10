@@ -7,6 +7,7 @@ import os
 from tqdm import tqdm
 import random
 from utils import *
+from sampleL import DynamicDataset
 
 """
     SVS-UNet Training Script with Validation
@@ -135,10 +136,6 @@ else:
 model = UNet()
 model.to(device)
 
-if os.path.exists(args.load_path):
-    model.load(args.load_path)
-    print(f"Loaded checkpoint from {args.load_path}")
-
 best_val_loss = 100.
 log_buffer = []
 scheduler = None
@@ -180,6 +177,19 @@ for ep in range(start_epoch, args.epoch):
     loop = tqdm(train_loader, desc=f"Epoch {ep+1}/{args.epoch} [Train]", leave=False)
     train_loss_sum = 0
     
+    # if ep == 401 or ep == 901:
+    #     new_lr = 5e-4 if ep == 401 else 1e-4
+    #     for param_group in model.optim.param_groups:
+    #         param_group['lr'] = new_lr
+    #     checkpoint = {
+    #         'epoch': ep + 1,                           # 當前訓練到的 Epoch
+    #         'model_state_dict': model.state_dict(),    # 模型權重
+    #         'optim': model.optim.state_dict(),         # 優化器狀態 (包含 momentum 等資訊)
+    #         'scheduler': scheduler.state_dict() if scheduler is not None else None, # 排程器狀態
+    #     }
+    #     torch.save(checkpoint, f'CKPT/svs_{args.label}_{ep}.pth')
+    #     print(f"\n[Info] Epoch {ep}: Learning rate manually changed to {new_lr}!\n")
+    
     for i, (mix, voc) in enumerate(loop):
         mix, voc = mix.to(device), voc.to(device)
         model.backward(mix, voc) # backward 內含 zero_grad, forward, loss, optim.step
@@ -208,12 +218,12 @@ for ep in range(start_epoch, args.epoch):
                 
                 # 手動計算 Loss (因為 model.backward 是訓練用的)
                 mask = model(mix)
-                loss = WeightedL1Loss.forward(voc, mix, mask)
-                val_loss_sum += loss
+                loss = model.crit(voc, mix, mask)
+                val_loss_sum += loss.item()
         
         avg_val_loss = val_loss_sum / len(valid_loader)
         log_buffer.append(f"Val {avg_val_loss}\n")
-        print(f"\n[Epoch {ep+1}] Train Loss: {avg_train_loss:.4e} | Val Loss: {avg_val_loss:.4e}")
+        print(f"\n[Epoch {ep+1}] Train Loss: {avg_train_loss:.6f} | Val Loss: {avg_val_loss:.6f}")
         
         if avg_val_loss < best_val_loss:
             model.save(best_weight)
@@ -229,7 +239,7 @@ for ep in range(start_epoch, args.epoch):
     
     else:
         # 平常只印 Train Loss
-        print(f"Epoch {ep+1} Avg Loss: {avg_train_loss:.4e}")
+        print(f"Epoch {ep+1} Avg Loss: {avg_train_loss:.6f}")
 
     # [修改] 儲存 Checkpoint (取代原本的 model.save)
     checkpoint = {
@@ -259,10 +269,11 @@ print("Finish training!")
 python train.py \
     --train_folder unet_spectrograms/train \
     --valid_folder unet_spectrograms/valid \
-    --label weightedL1 \
+    --label L1_1 \
     --batch_size 32 \
-    --epoch 400 \
-    --val_interval 10
+    --epoch 800 \
+    --val_interval 10 \
+    --load_path CKPT/svs_L1.pth
     
 想法：
 

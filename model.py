@@ -19,10 +19,10 @@ class WeightedL1Loss(nn.Module):
         
     def weighted(self, pred_spec, target_spec):
         l1_diff = torch.abs(pred_spec - target_spec)
-        weight = torch.sum(l1_diff, dim=-1, keepdim=True)
-        weighted_loss = l1_diff * weight
+        # weight = torch.sum(l1_diff, dim=-1, keepdim=True)
+        # weighted_loss = l1_diff * weight
         
-        return weighted_loss
+        return l1_diff
         
     def forward(self, target_vocal, target_mix, mask):
         pred_vocal = mask * target_mix
@@ -114,7 +114,7 @@ class UNet(nn.Module):
         self.loss_list_accomp = []
         self.loss_list_total = []
         
-        self.optim = torch.optim.Adam(self.parameters(), lr=1e-3)
+        self.optim = torch.optim.Adam(self.parameters(), lr=5e-3)
         # self.crit = LogL1Loss(alpha=64.)
         self.crit = WeightedL1Loss()
         # self.crit = nn.MSELoss()

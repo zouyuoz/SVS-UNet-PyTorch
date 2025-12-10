@@ -14,3 +14,7 @@ test_results/
 *.jpg
 
 LOG/
+zz/
+PRED_SPEC/
+
+.MUSDB18/

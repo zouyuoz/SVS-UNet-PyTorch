@@ -138,7 +138,7 @@ python data.py \
     --direction to_spec
 
 python inference.py \
-    --model_path CKPT/svs_best_L1_fine_tune.pth \
+    --model_path CKPT/svs_L1_1.pth \
     --mixture_folder custom_result/spec/mixture \
     --tar custom_result/spec/pred_spec \
     --vocal_solo 0
@@ -170,7 +170,7 @@ python data.py \
 +----------------------+
 
 python inference.py \
-    --model_path CKPT/svs_best_L1_ft16.pth \
+    --model_path CKPT/svs_L1_1.pth \
     --mixture_folder unet_spectrograms/test/mixture \
     --tar test_results/spec \
     --vocal_solo 1
