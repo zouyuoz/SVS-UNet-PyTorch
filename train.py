@@ -7,7 +7,7 @@ import os
 from tqdm import tqdm
 import random
 from utils import *
-from sampleL import DynamicDataset
+from sampleLoader import DynamicDataset
 
 """
     SVS-UNet Training Script with Validation
@@ -18,63 +18,6 @@ from sampleL import DynamicDataset
 device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 print(f"Using device: {device}")
 
-# =========================================================================================
-# Dataset Definition
-# =========================================================================================
-class SpectrogramDataset(Data.Dataset):
-    def __init__(self, path, samples_per_song=SAMPLES_PER_SONG):
-        self.path = path
-        self.mixture_path = os.path.join(path, 'mixture')
-        self.vocal_path = os.path.join(path, 'vocal')
-        self.samples_per_song = samples_per_song
-
-        if not os.path.exists(self.mixture_path):
-            raise FileNotFoundError(f"找不到 Mixture 資料夾: {self.mixture_path}")
-
-        # 讀取所有檔名
-        self.file_names = sorted([f for f in os.listdir(self.mixture_path) if f.endswith('_spec.npy')])
-        
-        # 確保對應檔案存在
-        self.file_names = [f for f in self.file_names if os.path.exists(os.path.join(self.vocal_path, f))]
-        
-        print(f"[{os.path.basename(path)}] 載入 {len(self.file_names)} 首歌曲，每輪採樣 {self.samples_per_song} 次，共 {len(self)} 筆資料。")
-
-    def __len__(self):
-        # 讓 Dataset 的長度變長 (歌曲數 * 每首歌採樣次數)
-        return len(self.file_names) * self.samples_per_song
-
-    def __getitem__(self, idx):
-        # 透過取餘數來決定現在要讀哪首歌
-        file_name = self.file_names[idx % len(self.file_names)]
-        
-        # 1. 讀取 .npy
-        mix = np.load(os.path.join(self.mixture_path, file_name))
-        voc = np.load(os.path.join(self.vocal_path, file_name))
-
-        # 2. 裁切頻率 (513 -> 512)
-        mix = mix[1:, :]
-        voc = voc[1:, :]
-
-        # 3. 隨機裁切時間軸 (Time -> 128)
-        target_len = INPUT_LEN
-        curr_len = mix.shape[1]
-        
-        if curr_len > target_len:
-            # 隨機選一個起點
-            start = random.randint(0, curr_len - target_len)
-            mix = mix[:, start:start + target_len]
-            voc = voc[:, start:start + target_len]
-        else:
-            # Padding
-            pad_width = target_len - curr_len
-            mix = np.pad(mix, ((0, 0), (0, pad_width)), mode='constant')
-            voc = np.pad(voc, ((0, 0), (0, pad_width)), mode='constant')
-
-        # 4. 轉 Tensor
-        mix = torch.from_numpy(mix[np.newaxis, :, :].astype(np.float32))
-        voc = torch.from_numpy(voc[np.newaxis, :, :].astype(np.float32))
-        
-        return mix, voc
 
 # =========================================================================================
 # 1. Parse the direction and related parameters
@@ -89,13 +32,13 @@ class SpectrogramDataset(Data.Dataset):
     --------------------------------------------------------------------------------------------
 """
 parser = argparse.ArgumentParser()
-parser.add_argument('--train_folder', type = str, default = './data/vocals')
+# parser.add_argument('--train_folder', type = str, default = './data/vocals')
 parser.add_argument('--load_path'   , type = str, default = 'result.pth')
 parser.add_argument('--label'       , type = str, required = True)
 parser.add_argument('--epoch'       , type = int, default = 2)
 parser.add_argument('--batch_size'  , type = int, default = 2)
 
-parser.add_argument('--valid_folder', type = str, default = 'unet_spectrograms/valid', help="驗證集路徑")
+# parser.add_argument('--valid_folder', type = str, default = 'unet_spectrograms/valid', help="驗證集路徑")
 parser.add_argument('--val_interval', type = int, default = 20, help="每幾輪做一次驗證")
 
 args = parser.parse_args()
@@ -107,31 +50,20 @@ ckpt_weight = f'CKPT/svs_{args.label}.pth'
 # =========================================================================================
 # 2. Training Setup
 # =========================================================================================
+WAV_ROOT = '.MUSDB18/' 
 
-# Train Loader
-train_dataset = SpectrogramDataset(args.train_folder)
+# 替換 Train Loader
 train_loader = Data.DataLoader(
-    dataset=train_dataset,
-    batch_size=args.batch_size,
-    num_workers=8, 
-    shuffle=True,
-    pin_memory=True if device.type == 'cuda' else False
+    # samples_per_epoch 設為 6400 (假設 100 首歌 * 64 採樣)
+    dataset = DynamicDataset(WAV_ROOT, split='train', samples_per_song=SAMPLES_PER_SONG),
+    batch_size=args.batch_size, num_workers=8, shuffle=True, pin_memory=True
 )
 
-# Valid Loader (如果不為空)
-valid_loader = None
-if os.path.exists(args.valid_folder):
-    valid_dataset = SpectrogramDataset(args.valid_folder)
-    if len(valid_dataset) > 0:
-        valid_loader = Data.DataLoader(
-            dataset=valid_dataset,
-            batch_size=args.batch_size, # 驗證時 batch size 可以大一點，這裡先保持一致
-            num_workers=2,
-            shuffle=False, # 驗證不需要洗牌
-            pin_memory=True if device.type == 'cuda' else False
-        )
-else:
-    print(f"Warning: 找不到驗證資料夾 {args.valid_folder}，將跳過驗證步驟。")
+# 替換 Valid Loader
+valid_loader = Data.DataLoader(
+    dataset = DynamicDataset(WAV_ROOT, split='valid', samples_per_song=SAMPLES_PER_SONG),
+    batch_size=args.batch_size, num_workers=4, shuffle=False, pin_memory=True
+)
 
 model = UNet()
 model.to(device)
@@ -267,14 +199,14 @@ print("Finish training!")
 """
 1208 midnight:
 python train.py \
-    --train_folder unet_spectrograms/train \
-    --valid_folder unet_spectrograms/valid \
-    --label L1_1 \
+    --label aug \
     --batch_size 32 \
-    --epoch 800 \
+    --epoch 900 \
     --val_interval 10 \
-    --load_path CKPT/svs_L1.pth
+    --load_path CKPT/svs_L1_1.pth
     
 想法：
+    --train_folder unet_spectrograms/train \
+    --valid_folder unet_spectrograms/valid \
 
 """
