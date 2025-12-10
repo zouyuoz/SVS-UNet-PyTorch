@@ -109,10 +109,13 @@ def debug_inference(model_path, spec_path):
 
     # 計算 dB 差異
     diff_db = pred_vocal_db - gt_vocal_db
+    # 計算各個頻率分箱的絕對誤差累積 (Mean Absolute Error per Frequency Bin)
+    # axis=1 代表沿著時間軸取平均，結果 shape 為 (512,)
+    freq_error_accum = np.mean(np.abs(diff_db), axis=1)
 
     # 6. 畫圖
     fig = plt.figure(figsize=(15, 6))
-    gs = fig.add_gridspec(3, 1)
+    gs = fig.add_gridspec(2, 2)
 
     aspect_ratio = 'auto'
     origin_set = 'lower'
@@ -132,7 +135,7 @@ def debug_inference(model_path, spec_path):
     plt.colorbar(im2, ax=ax2, format='%+2.0f dB')
 
     # --- 4. Predicted Vocal ---
-    ax3 = fig.add_subplot(gs[1, 0])
+    ax3 = fig.add_subplot(gs[0, 1])
     ax3.set_title("4. Predicted Vocal (Result)")
     im3 = ax3.imshow(pred_vocal_db, aspect=aspect_ratio, origin=origin_set, cmap='magma', vmin=db_vmin, vmax=db_vmax)
     plt.colorbar(im3, ax=ax3, format='%+2.0f dB')
@@ -140,18 +143,27 @@ def debug_inference(model_path, spec_path):
     # # --- 3. Mask ---
     # ax4 = fig.add_subplot(gs[1, 0])
     # ax4.set_title("3. Generated Mask (Concatenated)") # [修正] 標示為拼接後的 Mask
-    # # [修正] 這裡改用 mask_show (整首歌) 而不是 mask_img (最後一段)
     # im4 = ax4.imshow(mask_show, aspect=aspect_ratio, origin=origin_set, cmap='gray', vmin=0, vmax=1)
     # plt.colorbar(im4, ax=ax4)
     # ax4.text(5, 50, f"Avg: {mask_show.mean():.3f}", color='yellow', fontweight='bold')
 
     # --- 5. Difference Map (dB) ---
-    ax5 = fig.add_subplot(gs[2, 0])
-    ax5.set_title("5. Difference in dB (Pred - True) | Red: Noise (Too Loud) | Blue: Loss (Too Quiet)")
+    ax5 = fig.add_subplot(gs[1, 0])
+    ax5.set_title("5. Difference in dB (Pred - True)")
     
     diff_range = 40 
     im5 = ax5.imshow(diff_db, aspect=aspect_ratio, origin=origin_set, cmap='berlin', vmin=-diff_range, vmax=diff_range)
     plt.colorbar(im5, ax=ax5, format='%+2.0f dB')
+    
+    # --- 6. Frequency Error Bar Chart ---
+    ax6 = fig.add_subplot(gs[1, 1])
+    ax6.set_title("6. Avg Absolute Error per Freq Bin (dB)")
+    
+    # 繪製長條圖 (轉置方向以配合頻譜圖的縱軸)
+    # barh: 水平長條圖，y軸是頻率 index (0~511)，x軸是誤差值
+    freq_bins = np.arange(len(freq_error_accum))
+    ax6.barh(freq_bins, freq_error_accum, color='salmon', edgecolor='none')
+    ax6.text(10, 100, f"Avg: {freq_error_accum.mean():.3f}", color='red', fontweight='bold')
     
     tick_locations = np.arange(0, X_MAX, 60*SAMPLE_RATE/HOP_SIZE)
     tick_labels = (tick_locations / (60*SAMPLE_RATE/HOP_SIZE)).astype(int) 
@@ -165,14 +177,14 @@ def debug_inference(model_path, spec_path):
     
     # 存檔
     filename = os.path.basename(spec_path).replace('.npy', '')
-    output_path = f'viz_{filename}.png'
+    output_path = f'viz_{filename[:4]}_{args.model_path[9:-4]}.png'
     plt.savefig(output_path)
     print(f"Visualization saved to: {output_path}")
     plt.close()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_path', type=str, default='CKPT/svs_L1+SL_test.pth')
+    parser.add_argument('--model_path', type=str, default='CKPT/svs_L1_SL_mid.pth')
     parser.add_argument('--spec_path' , type=str, required=True, help="Path to the MIXTURE spectrogram")
     args = parser.parse_args()
     

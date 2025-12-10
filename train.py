@@ -248,6 +248,19 @@ for ep in range(start_epoch, args.epoch):
     loop = tqdm(train_loader, desc=f"Epoch {ep+1}/{args.epoch} [Train]", leave=False)
     train_loss_sum = 0
     
+    if ep == 400:
+        new_lr = 5e-4
+        for param_group in model.optim.param_groups:
+            param_group['lr'] = new_lr
+        checkpoint = {
+            'epoch': ep + 1,                           # 當前訓練到的 Epoch
+            'model_state_dict': model.state_dict(),    # 模型權重
+            'optim': model.optim.state_dict(),         # 優化器狀態 (包含 momentum 等資訊)
+            'scheduler': scheduler.state_dict() if scheduler is not None else None, # 排程器狀態
+        }
+        torch.save(checkpoint, f'CKPT/svs_{args.label}_400.pth')
+        print(f"\n[Info] Epoch {ep}: Learning rate manually changed to {new_lr}!\n")
+    
     # 修改：這裡假設 loader 回傳四個值，請根據你的 dataset 調整順序
     for i, (mix, voc, mix_phase, voc_phase) in enumerate(loop):
         # 1. 資料搬移到 Device
@@ -380,11 +393,19 @@ print("Finish training!")
 python train.py \
     --train_folder unet_spectrograms/train \
     --valid_folder unet_spectrograms/valid \
-    --label L1+SL_test \
+    --label L1_SL_mid \
     --batch_size 32 \
-    --epoch 100 \
-    --val_interval 10
+    --epoch 400 \
+    --val_interval 10 \
+    --load_path CKPT/svs_L1_SL_mid.pth
     
 想法：
+0.6666 : 166.6666
+*1.5
+1 : 250
+*4
+4 : 1000
+/100
+0.4 : 100
 
 """
