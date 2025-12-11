@@ -1,4 +1,4 @@
-from model import UNet, WeightedL1Loss
+from model import UNet
 import torch.utils.data as Data
 import numpy as np
 import argparse
