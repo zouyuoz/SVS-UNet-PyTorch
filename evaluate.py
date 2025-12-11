@@ -236,4 +236,32 @@ Mean SIR : 15.544 dB
 Mean SAR : 4.244 dB
 Mean NSDR: 8.820 dB
 
+svs_ag_mid_aug_best:
+
+0000_AM Contra - He:    SDR=8.787 dB,   SIR=17.305 dB,  SAR=9.526 dB,   NSDR=14.011 dB
+0001_Al James - Sch:    SDR=4.091 dB,   SIR=11.036 dB,  SAR=5.400 dB,   NSDR=5.113 dB
+0002_Angels In Ampl:    SDR=7.353 dB,   SIR=15.499 dB,  SAR=8.196 dB,   NSDR=10.354 dB
+0003_Arise - Run Ru:    SDR=2.555 dB,   SIR=9.057 dB,   SAR=4.164 dB,   NSDR=10.799 dB
+0004_BKS - Bulldoze:    SDR=-9.455 dB,  SIR=4.493 dB,   SAR=-7.955 dB,  NSDR=4.528 dB
+0005_BKS - Too Much:    SDR=7.862 dB,   SIR=16.015 dB,  SAR=8.690 dB,   NSDR=12.502 dB
+0006_Ben Carrigan -:    SDR=0.304 dB,   SIR=15.823 dB,  SAR=0.540 dB,   NSDR=7.202 dB
+0007_Bobby Nobody -:    SDR=2.945 dB,   SIR=9.382 dB,   SAR=4.538 dB,   NSDR=8.962 dB
+0008_Buitraker - Re:    SDR=1.967 dB,   SIR=8.276 dB,   SAR=3.727 dB,   NSDR=11.642 dB
+0009_Carlos Gonzale:    SDR=3.877 dB,   SIR=10.020 dB,  SAR=5.498 dB,   NSDR=5.365 dB
+0010_Cristina Vane :    SDR=6.399 dB,   SIR=14.464 dB,  SAR=7.289 dB,   NSDR=10.998 dB
+0011_Detsky Sad - W:    SDR=1.372 dB,   SIR=6.685 dB,   SAR=3.729 dB,   NSDR=9.143 dB
+0012_Enda Reilly - :    SDR=6.414 dB,   SIR=14.706 dB,  SAR=7.255 dB,   NSDR=10.282 dB
+0013_Forkupines - S:    SDR=2.966 dB,   SIR=14.819 dB,  SAR=3.400 dB,   NSDR=12.733 dB
+0014_Georgia Wonder:    SDR=1.501 dB,   SIR=9.029 dB,   SAR=2.857 dB,   NSDR=8.470 dB
+0015_Girls Under Gl:    SDR=3.171 dB,   SIR=13.840 dB,  SAR=3.736 dB,   NSDR=13.727 dB
+0016_Hollow Ground :    SDR=3.929 dB,   SIR=11.148 dB,  SAR=5.163 dB,   NSDR=14.842 dB
+0017_James Elder & :    SDR=5.353 dB,   SIR=12.707 dB,  SAR=6.463 dB,   NSDR=8.527 dB
+0018_Juliet's Rescu:    SDR=5.170 dB,   SIR=16.182 dB,  SAR=5.632 dB,   NSDR=14.109 dB
+0019_Little Chicago:    SDR=4.757 dB,   SIR=7.718 dB,   SAR=8.495 dB,   NSDR=6.961 dB
+
+=== Overall Mean Metrics (vocal) ===
+Mean SDR : 3.566 dB
+Mean SIR : 11.910 dB
+Mean SAR : 4.817 dB
+Mean NSDR: 10.014 dB
 """
