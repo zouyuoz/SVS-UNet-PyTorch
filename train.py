@@ -7,7 +7,7 @@ import os
 from tqdm import tqdm
 import random
 from utils import *
-from sampleLoader import DynamicDataset
+from sampleLoader import DynamicDataset, SpectrogramDataset
 
 """
     SVS-UNet Training Script with Validation
@@ -17,7 +17,6 @@ from sampleLoader import DynamicDataset
 # Determine device
 device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 print(f"Using device: {device}")
-
 
 # =========================================================================================
 # 1. Parse the direction and related parameters
@@ -43,7 +42,7 @@ parser.add_argument('--val_interval', type = int, default = 20, help="每幾輪�
 
 args = parser.parse_args()
 
-log_file = f'LOG/log_{args.label}.txt'
+log_file    = f'LOG/log_{args.label}.txt'
 best_weight = f'CKPT/svs_best_{args.label}.pth'
 ckpt_weight = f'CKPT/svs_{args.label}.pth'
 
@@ -54,14 +53,13 @@ WAV_ROOT = '.MUSDB18/'
 
 # 替換 Train Loader
 train_loader = Data.DataLoader(
-    # samples_per_epoch 設為 6400 (假設 100 首歌 * 64 採樣)
-    dataset = DynamicDataset(WAV_ROOT, split='train', samples_per_song=SAMPLES_PER_SONG),
+    dataset = SpectrogramDataset(path=args.train_folder, samples_per_song=SAMPLES_PER_SONG),
     batch_size=args.batch_size, num_workers=8, shuffle=True, pin_memory=True
 )
 
 # 替換 Valid Loader
 valid_loader = Data.DataLoader(
-    dataset = DynamicDataset(WAV_ROOT, split='valid', samples_per_song=SAMPLES_PER_SONG),
+    dataset = SpectrogramDataset(path=args.valid_folder, samples_per_song=SAMPLES_PER_SONG),
     batch_size=args.batch_size, num_workers=4, shuffle=False, pin_memory=True
 )
 

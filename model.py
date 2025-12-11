@@ -171,15 +171,10 @@ class UNet(nn.Module):
         self.deconv6 = nn.ConvTranspose2d(32, 1, kernel_size=(5, 5), stride=(2, 2), padding=2)
 
         # Define loss list
-        self.loss_list_vocal = []
-        self.loss_list_accomp = []
         self.loss_list_total = []
         
         self.optim = torch.optim.Adam(self.parameters(), lr=5e-3)
-        # self.crit = LogL1Loss(alpha=64.)
         self.crit = nn.L1Loss()
-        # self.crit = nn.MSELoss()
-        # self.crit = nn.SmoothL1Loss()
 
     # ==============================================================================
     #   IO
