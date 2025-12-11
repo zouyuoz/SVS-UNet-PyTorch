@@ -120,7 +120,7 @@ class UNet(nn.Module):
             nn.ReLU(True),
             nn.Dropout2d(0.5)
         )
-        self.att1 = AttentionGate(F_g=256, F_l=256, F_int=128)
+        self.attn1 = AttentionGate(F_g=256, F_l=256, F_int=128)
         
         self.deconv2 = nn.ConvTranspose2d(512, 128, kernel_size=(5, 5), stride=(2, 2), padding=2)
         self.deconv2_BAD = nn.Sequential(
@@ -128,7 +128,7 @@ class UNet(nn.Module):
             nn.ReLU(True),
             nn.Dropout2d(0.5)
         )
-        self.att2 = AttentionGate(F_g=128, F_l=128, F_int=64)
+        self.attn2 = AttentionGate(F_g=128, F_l=128, F_int=64)
         
         self.deconv3 = nn.ConvTranspose2d(256, 64, kernel_size=(5, 5), stride=(2, 2), padding=2)
         self.deconv3_BAD = nn.Sequential(
@@ -136,7 +136,7 @@ class UNet(nn.Module):
             nn.ReLU(True),
             nn.Dropout2d(0.5)
         )
-        self.att3 = AttentionGate(F_g=64, F_l=64, F_int=32)
+        self.attn3 = AttentionGate(F_g=64, F_l=64, F_int=32)
         
         self.deconv4 = nn.ConvTranspose2d(128, 32, kernel_size=(5, 5), stride=(2, 2), padding=2)
         self.deconv4_BAD = nn.Sequential(
@@ -144,7 +144,7 @@ class UNet(nn.Module):
             nn.ReLU(True),
             nn.Dropout2d(0.5)
         )
-        self.att4 = AttentionGate(F_g=32, F_l=32, F_int=16)
+        self.attn4 = AttentionGate(F_g=32, F_l=32, F_int=16)
         
         self.deconv5 = nn.ConvTranspose2d(64, 16, kernel_size=(5, 5), stride=(2, 2), padding=2)
         self.deconv5_BAD = nn.Sequential(
@@ -152,7 +152,7 @@ class UNet(nn.Module):
             nn.ReLU(True),
             nn.Dropout2d(0.5)
         )
-        self.att5 = AttentionGate(F_g=16, F_l=16, F_int=8)
+        self.attn5 = AttentionGate(F_g=16, F_l=16, F_int=8)
         
         self.deconv6 = nn.ConvTranspose2d(32, 1, kernel_size=(5, 5), stride=(2, 2), padding=2)
         
@@ -178,23 +178,23 @@ class UNet(nn.Module):
         
         deconv1_out = self.deconv1(conv6_out, output_size=conv5_out.size())
         deconv1_out = self.deconv1_BAD(deconv1_out)
-        conv5_att = self.att1(g=deconv1_out, x=conv5_out)
+        conv5_att = self.attn1(g=deconv1_out, x=conv5_out)
         
         deconv2_out = self.deconv2(torch.cat([deconv1_out, conv5_att], 1), output_size=conv4_out.size())
         deconv2_out = self.deconv2_BAD(deconv2_out)
-        conv4_att = self.att1(g=deconv2_out, x=conv4_out)
+        conv4_att = self.attn2(g=deconv2_out, x=conv4_out)
         
         deconv3_out = self.deconv3(torch.cat([deconv2_out, conv4_att], 1), output_size=conv3_out.size())
         deconv3_out = self.deconv3_BAD(deconv3_out)
-        conv3_att = self.att1(g=deconv3_out, x=conv3_out)
+        conv3_att = self.attn3(g=deconv3_out, x=conv3_out)
         
         deconv4_out = self.deconv4(torch.cat([deconv3_out, conv3_att], 1), output_size=conv2_out.size())
         deconv4_out = self.deconv4_BAD(deconv4_out)
-        conv2_att = self.att1(g=deconv4_out, x=conv2_out)
+        conv2_att = self.attn4(g=deconv4_out, x=conv2_out)
         
         deconv5_out = self.deconv5(torch.cat([deconv4_out, conv2_att], 1), output_size=conv1_out.size())
         deconv5_out = self.deconv5_BAD(deconv5_out)
-        conv1_att = self.att1(g=deconv5_out, x=conv1_out)
+        conv1_att = self.attn5(g=deconv5_out, x=conv1_out)
         
         deconv6_out = self.deconv6(torch.cat([deconv5_out, conv1_att], 1), output_size=mix.size())
         

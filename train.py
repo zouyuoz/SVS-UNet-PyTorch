@@ -75,34 +75,34 @@ start_epoch = 0
 # =========================================================================================
 # Load Checkpoint
 # =========================================================================================
-if os.path.exists(args.load_path):
-    print(f"Loading checkpoint from {args.load_path}")
-    checkpoint = torch.load(args.load_path, map_location=device)
+# if os.path.exists(args.load_path):
+#     print(f"Loading checkpoint from {args.load_path}")
+#     checkpoint = torch.load(args.load_path, map_location=device)
     
-    # 1. 載入模型權重
-    model.load_state_dict(checkpoint['model_state_dict'])
+#     # 1. 載入模型權重
+#     model.load_state_dict(checkpoint['model_state_dict'])
     
-    # 2. 載入優化器狀態
-    if 'optim' in checkpoint:
-        model.optim.load_state_dict(checkpoint['optim'])
+#     # 2. 載入優化器狀態
+#     if 'optim' in checkpoint:
+#         model.optim.load_state_dict(checkpoint['optim'])
         
-    # 3. 載入 Epoch (接續訓練關鍵)
-    start_epoch = checkpoint.get('epoch', 0)
+#     # 3. 載入 Epoch (接續訓練關鍵)
+#     start_epoch = checkpoint.get('epoch', 0)
     
-    # 4. 載入 Scheduler (如果有)
-    if scheduler is not None and 'scheduler' in checkpoint and checkpoint['scheduler'] is not None:
-        scheduler.load_state_dict(checkpoint['scheduler'])
+#     # 4. 載入 Scheduler (如果有)
+#     if scheduler is not None and 'scheduler' in checkpoint and checkpoint['scheduler'] is not None:
+#         scheduler.load_state_dict(checkpoint['scheduler'])
         
-    # 5. [修改] 載入 Loss History & 恢復 Best Loss
-    if 'train_loss_history' in checkpoint:
-        train_loss_history = checkpoint['train_loss_history']
+#     # 5. [修改] 載入 Loss History & 恢復 Best Loss
+#     if 'train_loss_history' in checkpoint:
+#         train_loss_history = checkpoint['train_loss_history']
         
-    if 'valid_loss_history' in checkpoint:
-        valid_loss_history = checkpoint['valid_loss_history']
-        # [關鍵] 從歷史紀錄中恢復最佳 loss，否則會被重置為 100
-        if len(valid_loss_history) > 0:
-            best_val_loss = min(valid_loss_history)
-            print(f"Restored best_val_loss: {best_val_loss:.6f}")
+#     if 'valid_loss_history' in checkpoint:
+#         valid_loss_history = checkpoint['valid_loss_history']
+#         # [關鍵] 從歷史紀錄中恢復最佳 loss，否則會被重置為 100
+#         if len(valid_loss_history) > 0:
+#             best_val_loss = min(valid_loss_history)
+#             print(f"Restored best_val_loss: {best_val_loss:.6f}")
 
 # =========================================================================================
 # 3. Main Loop
