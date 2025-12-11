@@ -135,72 +135,47 @@ class SpectrogramDataset(Data.Dataset):
         if not os.path.exists(self.mixture_path):
             raise FileNotFoundError(f"找不到 Mixture 資料夾: {self.mixture_path}")
 
-        # 讀取所有檔名 (以前綴 _spec.npy 為主)
+        # 讀取所有檔名
         self.file_names = sorted([f for f in os.listdir(self.mixture_path) if f.endswith('_spec.npy')])
         
-        # 確保對應的 Vocal 檔案存在
+        # 確保對應檔案存在
         self.file_names = [f for f in self.file_names if os.path.exists(os.path.join(self.vocal_path, f))]
         
         print(f"[{os.path.basename(path)}] 載入 {len(self.file_names)} 首歌曲，每輪採樣 {self.samples_per_song} 次，共 {len(self)} 筆資料。")
 
     def __len__(self):
+        # 讓 Dataset 的長度變長 (歌曲數 * 每首歌採樣次數)
         return len(self.file_names) * self.samples_per_song
 
     def __getitem__(self, idx):
         # 透過取餘數來決定現在要讀哪首歌
         file_name = self.file_names[idx % len(self.file_names)]
         
-        # 建構 Phase 的檔名 (將 _spec.npy 替換為 _phase.npy)
-        phase_name = file_name.replace('_spec.npy', '_phase.npy')
-        
-        # 1. 讀取 .npy (Mag + Phase)
-        mix_path = os.path.join(self.mixture_path, file_name)
-        voc_path = os.path.join(self.vocal_path, file_name)
-        mix_phase_path = os.path.join(self.mixture_path, phase_name)
-        voc_phase_path = os.path.join(self.vocal_path, phase_name)
-        
-        mix = np.load(mix_path)
-        voc = np.load(voc_path)
-        
-        # [新增] 讀取 Phase，若找不到則報錯或給預設值(建議報錯以確保資料正確)
-        mix_phase = np.load(mix_phase_path)
-        voc_phase = np.load(voc_phase_path)
-        mix_phase = np.angle(mix_phase).astype(np.float32)
-        voc_phase = np.angle(voc_phase).astype(np.float32)
+        # 1. 讀取 .npy
+        mix = np.load(os.path.join(self.mixture_path, file_name))
+        voc = np.load(os.path.join(self.vocal_path, file_name))
 
-        # 2. 裁切頻率 (513 -> 512) [注意：Phase 也要跟著裁切]
-        # 這裡切掉了第 0 個 bin (DC component)，之後 iSTFT 前記得補回來
+        # 2. 裁切頻率 (513 -> 512)
         mix = mix[1:, :]
         voc = voc[1:, :]
-        mix_phase = mix_phase[1:, :]
-        voc_phase = voc_phase[1:, :]
 
         # 3. 隨機裁切時間軸 (Time -> 128)
         target_len = INPUT_LEN
         curr_len = mix.shape[1]
         
         if curr_len > target_len:
-            # [關鍵] 隨機選一個起點，Mag 和 Phase 必須共用這個 start
+            # 隨機選一個起點
             start = random.randint(0, curr_len - target_len)
-            
             mix = mix[:, start:start + target_len]
             voc = voc[:, start:start + target_len]
-            mix_phase = mix_phase[:, start:start + target_len]
-            voc_phase = voc_phase[:, start:start + target_len]
         else:
             # Padding
             pad_width = target_len - curr_len
-            # Mag 補 0
             mix = np.pad(mix, ((0, 0), (0, pad_width)), mode='constant')
             voc = np.pad(voc, ((0, 0), (0, pad_width)), mode='constant')
-            # Phase 補 0 (數學上 Magnitude 為 0 時 Phase 無意義，補 0 即可)
-            mix_phase = np.pad(mix_phase, ((0, 0), (0, pad_width)), mode='constant')
-            voc_phase = np.pad(voc_phase, ((0, 0), (0, pad_width)), mode='constant')
 
         # 4. 轉 Tensor
         mix = torch.from_numpy(mix[np.newaxis, :, :].astype(np.float32))
         voc = torch.from_numpy(voc[np.newaxis, :, :].astype(np.float32))
-        mix_phase = torch.from_numpy(mix_phase[np.newaxis, :, :].astype(np.float32))
-        voc_phase = torch.from_numpy(voc_phase[np.newaxis, :, :].astype(np.float32))
         
-        return mix, voc, mix_phase, voc_phase
+        return mix, voc

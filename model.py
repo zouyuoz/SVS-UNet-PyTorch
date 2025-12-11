@@ -12,26 +12,21 @@ import auraloss
     @Revise: SunnerLi
 """
 
-""" WeightedL1Loss
 class WeightedL1Loss(nn.Module):
     def __init__(self, reduction='mean'):
         super().__init__()
         self.reduction = reduction
         
-    def weighted(self, pred_spec, target_spec):
-        l1_diff = torch.abs(pred_spec - target_spec)
-        # weight = torch.sum(l1_diff, dim=-1, keepdim=True)
-        # weighted_loss = l1_diff * weight
-        
-        return l1_diff
+    def absoluteError(self, pred_spec, target_spec):
+        return torch.abs(pred_spec - target_spec)
         
     def forward(self, target_vocal, target_mix, mask):
         pred_vocal = mask * target_mix
         pred_accomp = (1 - mask) * target_mix
         target_accomp = torch.clamp(target_mix - target_vocal, min=0.0)
         
-        loss_v = self.weighted(pred_vocal, target_vocal)
-        loss_a = self.weighted(pred_accomp, target_accomp)
+        loss_v = self.absoluteError(pred_vocal, target_vocal)
+        loss_a = self.absoluteError(pred_accomp, target_accomp)
         loss = loss_v + loss_a
         
         if self.reduction == 'mean':
@@ -40,7 +35,6 @@ class WeightedL1Loss(nn.Module):
             return loss.sum()
         
         return loss
-"""
 
 class SelfAttention(nn.Module):
     """ 
@@ -174,41 +168,6 @@ class UNet(nn.Module):
         self.crit = nn.L1Loss()
 
     # ==============================================================================
-    #   IO
-    # ==============================================================================
-    def load(self, path):
-        if os.path.exists(path):
-            print("Load the pre-trained model from {}".format(path))
-            # map_location='cpu' ensures we can load even without CUDA
-            state = torch.load(path, map_location='cpu') 
-            
-            # Load simple attributes
-            for (key, obj) in state.items():
-                if 'loss_list' in key: # Fix for string matching
-                    setattr(self, key, obj)
-            
-            # Load weights
-            self.load_state_dict(state['model_state_dict'], strict=False)
-            if 'optim' in state:
-                self.optim.load_state_dict(state['optim'])
-        else:
-            print("Pre-trained model {} is not exist...".format(path))
-
-    def save(self, path):
-        # Record the parameters
-        # Use standard state_dict saving which is cleaner than saving individual layers
-        state = {
-            'model_state_dict': self.state_dict(),
-            'optim': self.optim.state_dict(),
-        }
-
-        # Record the loss history
-        for key in self.__dict__:
-            if 'loss_list' in key:
-                state[key] = getattr(self, key)
-        torch.save(state, path)
-
-    # ==============================================================================
     #   Set & Get
     # ==============================================================================
     def forward(self, mix):
@@ -267,9 +226,8 @@ class UNet(nn.Module):
                     voc     (torch.Tensor)  - The pure vocal spectrogram which size is (B, 1, 512, 128)
         """
         self.optim.zero_grad()
-        msk = self.forward(mix)
-        
-        loss = self.crit(voc, mix, msk)
+        mask = self.forward(mix)
+        loss = self.crit(mask * mix, voc)
         loss.backward()
         self.optim.step()
         return loss.item()

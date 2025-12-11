@@ -2,111 +2,66 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 import sys
+import torch
 
 # --- 設定輸入檔案名稱 ---
-# 假設您的檔案名為 losses.txt
-TXT_FILE_NAME = 'log_L1_1.txt'
+CKPT_FILE_NAME = 'CKPT/svs_attn_test.pth'
+checkpoint = torch.load(CKPT_FILE_NAME)
+train_loss_history = checkpoint.get('train_loss_history')
+valid_loss_history = checkpoint.get('valid_loss_history')
+# print(len(train_loss_history))
+# print(len(valid_loss_history))
 
 # --- 模擬數據生成結束 ---
-def process_and_plot_losses(file_path):
-    """
-    讀取文字檔案，提取 Loss 和 Val Loss，並繪製折線圖。
-    """
-    if not os.path.exists(file_path):
-        print(f"ERROR: File not found: {file_path}")
-        sys.exit(1)
-    
-    train_losses = []
-    val_losses = []
-    val_x_indices = []
-    current_x_index = 1
-
-    # --- 數據解析與對齊 ---
-    try:
-        with open(file_path, 'r') as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-
-                if line.startswith('Val'):
-                    # 提取 Val Loss
-                    try:
-                        val_value = float(line.replace('Val', '').strip())
-                        val_losses.append(val_value)
-                        
-                        # Val Loss 對齊它上一個 Loss 的 X 座標
-                        # current_x_index 已經在前面 Loss 處理時遞增過
-                        if current_x_index > 0:
-                            val_x_indices.append(current_x_index - 1)
-                        else:
-                            # 避免檔案開頭就是 Val Loss
-                            print("WARNING: Skipped Val Loss at start of file due to missing preceding Loss.")
-                            val_losses.pop() # 移除這個無效的 Val Loss
-                            
-                    except ValueError:
-                        print(f"WARNING: Skipping invalid Val Loss entry: {line}")
-                
-                else:
-                    # 提取 Loss (純數字)
-                    try:
-                        train_value = float(line)
-                        train_losses.append(train_value)
-                        # 每個 Loss 數據點都遞增 X 座標
-                        current_x_index += 1 
-                        
-                    except ValueError:
-                        print(f"WARNING: Skipping invalid Loss entry: {line}")
-
-    except Exception as e:
-        print(f"ERROR: An error occurred during file reading: {e}")
-        sys.exit(1)
+def plot_losses(train_loss_history, valid_loss_history):
+    # 1. 確保數據是列表或 numpy array (如果 checkpoint 存的是 Tensor，需要轉換)
+    if isinstance(train_loss_history, torch.Tensor):
+        train_loss_history = train_loss_history.cpu().numpy()
+    if isinstance(valid_loss_history, torch.Tensor):
+        valid_loss_history = valid_loss_history.cpu().numpy()
         
-    if not train_losses:
-        print("INFO: No valid Loss data found for plotting.")
+    # 避免除以零錯誤
+    if len(valid_loss_history) == 0:
+        print("Error: valid_loss_history is empty.")
         return
 
-    # 確保 Val Loss 有數據點
-    if not val_losses:
-        print("INFO: No valid Val Loss data found, plotting Loss only.")
+    # 2. 計算間隔 (Interval)
+    # 例如: Train=73, Val=7 -> interval = 10
+    interval = len(train_loss_history) // len(valid_loss_history)
+    
+    print(f"Info: Detected alignment interval: every {interval} steps.")
 
+    # 3. 建立 X 軸座標
+    # Train X 軸: [1, 2, 3, ..., 73]
+    train_x = range(1, len(train_loss_history) + 1)
+    
+    # Val X 軸: [10, 20, 30, ..., 70]
+    # 公式: (i + 1) * interval
+    val_x = [(i + 1) * interval for i in range(len(valid_loss_history))]
 
-    # --- 繪圖設定與執行 ---
+    # 4. 繪圖
     plt.figure(figsize=(10, 6))
     
-    # 創建 Loss 的 X 軸
-    train_x_indices = range(len(train_losses))
-
-    # 繪製 Loss 數據
-    plt.plot(train_x_indices, train_losses, linestyle='-', color='blue', label='Train Loss', linewidth=1)
+    # 畫 Train Loss
+    plt.plot(train_x, train_loss_history, label='Train Loss', color='blue', linewidth=1)
     
-    # 繪製 Val Loss 數據
-    if val_losses:
-        # 使用 val_x_indices 確保 Val Loss 與對應的 Loss 點對齊
-        plt.plot(val_x_indices, val_losses, linestyle='--', color='red', label='Val Loss', marker='o', markersize=3)
-        
-    # 設定圖表屬性
-    plt.title('Training and Validation Loss Over Steps', fontsize=14)
-    plt.xlabel('Training Step Index', fontsize=12)
-    plt.ylabel('Loss Value', fontsize=12)
-    plt.legend(loc='upper right')
+    # 畫 Val Loss (加上 marker 以便觀察確切落點)
+    plt.plot(val_x, valid_loss_history, label='Valid Loss', color='red', marker='o', linestyle='--', markersize=3)
+
+    plt.title(f'Loss History (Val Interval: {interval})')
+    plt.xlabel('Steps / Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
     plt.grid(True, linestyle='--', alpha=0.6)
     
-    # 設置 X 軸刻度為整數，確保清晰
-    if len(train_losses) < 50:
-         plt.xticks(train_x_indices)
-
-    # 輸出結果
-    plt.savefig('output.png') 
-
-    # 打印原始數據摘要 (無中文)
-    print("\n--- Data Summary ---")
-    print(f"Total Train Loss points: {len(train_losses)}")
-    print(f"Total Val Loss points: {len(val_losses)}")
-    print("--------------------")
+    # 如果你在 VS Code 或支援 GUI 的環境
+    # plt.show()
+    
+    # 如果你在 WSL 無法顯示視窗，請存成圖片
+    plt.savefig('output.png')
+    print("Plot saved to output.png")
 
 
 # --- 執行分析 ---
 if __name__ == "__main__":
-    Path = 'LOG/' + TXT_FILE_NAME
-    process_and_plot_losses(Path)
+    plot_losses(train_loss_history, valid_loss_history)

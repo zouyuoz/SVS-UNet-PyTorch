@@ -31,19 +31,18 @@ print(f"Using device: {device}")
     --------------------------------------------------------------------------------------------
 """
 parser = argparse.ArgumentParser()
-# parser.add_argument('--train_folder', type = str, default = './data/vocals')
-parser.add_argument('--load_path'   , type = str, default = 'result.pth')
+parser.add_argument('--train_folder', type = str, default = 'unet_spectrograms/train')
+parser.add_argument('--valid_folder', type = str, default = 'unet_spectrograms/valid')
 parser.add_argument('--label'       , type = str, required = True)
-parser.add_argument('--epoch'       , type = int, default = 2)
-parser.add_argument('--batch_size'  , type = int, default = 2)
-
-# parser.add_argument('--valid_folder', type = str, default = 'unet_spectrograms/valid', help="驗證集路徑")
-parser.add_argument('--val_interval', type = int, default = 20, help="每幾輪做一次驗證")
+parser.add_argument('--batch_size'  , type = int, default = 8)
+parser.add_argument('--epoch'       , type = int, default = 10)
+parser.add_argument('--val_interval', type = int, default = 20)
+parser.add_argument('--load_path'   , type = str)
 
 args = parser.parse_args()
 
 log_file    = f'LOG/log_{args.label}.txt'
-best_weight = f'CKPT/svs_best_{args.label}.pth'
+best_weight = f'CKPT/svs_{args.label}_best.pth'
 ckpt_weight = f'CKPT/svs_{args.label}.pth'
 
 # =========================================================================================
@@ -72,7 +71,9 @@ valid_loss_history = []
 scheduler = None
 start_epoch = 0
 
-# 這是給您參考的載入寫法 (放在 train.py 初始化階段)
+# =========================================================================================
+# Load Checkpoint
+# =========================================================================================
 if os.path.exists(args.load_path):
     print(f"Loading checkpoint from {args.load_path}")
     checkpoint = torch.load(args.load_path, map_location=device)
@@ -84,17 +85,23 @@ if os.path.exists(args.load_path):
     if 'optim' in checkpoint:
         model.optim.load_state_dict(checkpoint['optim'])
         
-    # 3. 載入 Epoch (如果要接續訓練)
+    # 3. 載入 Epoch (接續訓練關鍵)
     start_epoch = checkpoint.get('epoch', 0)
     
     # 4. 載入 Scheduler (如果有)
     if scheduler is not None and 'scheduler' in checkpoint and checkpoint['scheduler'] is not None:
         scheduler.load_state_dict(checkpoint['scheduler'])
         
-    # 5. 載入 Loss 紀錄 (選用)
-    for key in checkpoint:
-        if key.startswith('loss_list'):
-            setattr(model, key, checkpoint[key])
+    # 5. [修改] 載入 Loss History & 恢復 Best Loss
+    if 'train_loss_history' in checkpoint:
+        train_loss_history = checkpoint['train_loss_history']
+        
+    if 'valid_loss_history' in checkpoint:
+        valid_loss_history = checkpoint['valid_loss_history']
+        # [關鍵] 從歷史紀錄中恢復最佳 loss，否則會被重置為 100
+        if len(valid_loss_history) > 0:
+            best_val_loss = min(valid_loss_history)
+            print(f"Restored best_val_loss: {best_val_loss:.6f}")
 
 # =========================================================================================
 # 3. Main Loop
@@ -112,12 +119,6 @@ for ep in range(start_epoch, args.epoch):
     #     new_lr = 5e-4 if ep == 401 else 1e-4
     #     for param_group in model.optim.param_groups:
     #         param_group['lr'] = new_lr
-    #     checkpoint = {
-    #         'epoch': ep + 1,                           # 當前訓練到的 Epoch
-    #         'model_state_dict': model.state_dict(),    # 模型權重
-    #         'optim': model.optim.state_dict(),         # 優化器狀態 (包含 momentum 等資訊)
-    #         'scheduler': scheduler.state_dict() if scheduler is not None else None, # 排程器狀態
-    #     }
     #     torch.save(checkpoint, f'CKPT/svs_{args.label}_{ep}.pth')
     #     print(f"\n[Info] Epoch {ep}: Learning rate manually changed to {new_lr}!\n")
     
@@ -135,19 +136,19 @@ for ep in range(start_epoch, args.epoch):
     # --- Validation Phase (Every 10 epochs) ---
     avg_val_loss = 1000.
     if valid_loader and (ep + 1) % args.val_interval == 0:
-        model.eval() # 切換到評估模式 (關閉 Dropout, BatchNorm 變動)
+        model.eval() # 切換到評估模式
         val_loss_sum = 0
         
-        with torch.no_grad(): # 不計算梯度，節省記憶體
-            # 使用 tqdm 顯示驗證進度
+        # 不計算梯度
+        with torch.no_grad():
             val_loop = tqdm(valid_loader, desc=f"Epoch {ep+1} [Valid]", leave=False)
             
             for mix, voc in val_loop:
                 mix, voc = mix.to(device), voc.to(device)
                 
-                # 手動計算 Loss (因為 model.backward 是訓練用的)
+                # 計算 Loss
                 mask = model(mix)
-                loss = model.crit(voc, mix, mask)
+                loss = model.crit(mix * mask, voc)
                 val_loss_sum += loss.item()
         
         avg_val_loss = val_loss_sum / len(valid_loader)
@@ -180,14 +181,13 @@ print("Finish training!")
 """
 1208 midnight:
 python train.py \
-    --label aug \
-    --batch_size 32 \
-    --epoch 900 \
-    --val_interval 10 \
-    --load_path CKPT/svs_L1_1.pth
-    
-想法：
     --train_folder unet_spectrograms/train \
     --valid_folder unet_spectrograms/valid \
+    --label attn_test \
+    --batch_size 32 \
+    --epoch 100 \
+    --val_interval 10
+    
+想法：
 
 """
