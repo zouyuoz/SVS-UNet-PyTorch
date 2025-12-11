@@ -1,4 +1,5 @@
-from model import UNet
+# from model import UNet
+from model_AG import UNet
 import torch.utils.data as Data
 import numpy as np
 import argparse
@@ -153,28 +154,27 @@ for ep in range(start_epoch, args.epoch):
         
         avg_val_loss = val_loss_sum / len(valid_loader)
         valid_loss_history.append(avg_val_loss)
+
+        # 儲存 Checkpoint
+        checkpoint = {
+            'epoch': ep + 1,
+            'model_state_dict': model.state_dict(),
+            'optim': model.optim.state_dict(),
+            'scheduler': scheduler.state_dict() if scheduler is not None else None,
+            'train_loss_history': train_loss_history,
+            'valid_loss_history': valid_loss_history
+        }
+        torch.save(checkpoint, ckpt_weight)
         
+        is_best_val_loss = ''
         if avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss
+            is_best_val_loss = '*'
+            torch.save(checkpoint, best_weight)
             
-        print(f"\n[Epoch {ep+1}] Train Loss: {avg_train_loss:.6f} | Val Loss: {avg_val_loss:.6f}")
+        print(f"\n[Epoch {ep+1}] Train Loss: {avg_train_loss:.6f} | Val Loss: {avg_val_loss:.6f} " + is_best_val_loss)
         
-    else:
-        # 平常只印 Train Loss
-        print(f"Epoch {ep+1} Avg Loss: {avg_train_loss:.6f}")
-
-    # [修改] 儲存 Checkpoint (取代原本的 model.save)
-    checkpoint = {
-        'epoch': ep + 1,                           # 當前訓練到的 Epoch
-        'model_state_dict': model.state_dict(),    # 模型權重
-        'optim': model.optim.state_dict(),         # 優化器狀態 (包含 momentum 等資訊)
-        'scheduler': scheduler.state_dict() if scheduler is not None else None, # 排程器狀態
-        'train_loss_history': train_loss_history,
-        'valid_loss_history': valid_loss_history
-    }
-    
-    torch.save(checkpoint, ckpt_weight)
-    if avg_val_loss < best_val_loss: torch.save(checkpoint, best_weight)
+    else: print(f"Epoch {ep+1} Avg Loss: {avg_train_loss:.6f}")
 
 print("Finish training!")
 
@@ -183,10 +183,11 @@ print("Finish training!")
 python train.py \
     --train_folder unet_spectrograms/train \
     --valid_folder unet_spectrograms/valid \
-    --label attn_test \
+    --label attn_gate \
     --batch_size 32 \
     --epoch 100 \
-    --val_interval 10
+    --val_interval 10 \
+    --load_path CKPT/svs_attn_test.pth
     
 想法：
 

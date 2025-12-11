@@ -4,8 +4,12 @@ import matplotlib.pyplot as plt
 import os
 import argparse
 import librosa
+# from model_old import UNet
 from model import UNet
 from utils import *
+import warnings
+
+warnings.filterwarnings("ignore")
 
 def debug_inference(model_path, spec_path):
     # 1. 準備模型
@@ -184,7 +188,7 @@ def debug_inference(model_path, spec_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_path', type=str, default='CKPT/svs_attn_test.pth')
+    parser.add_argument('--model_path', type=str, default='CKPT/svs_attn_grad_clip_best.pth')
     parser.add_argument('--spec_path' , type=str, required=True, help="Path to the MIXTURE spectrogram")
     args = parser.parse_args()
     

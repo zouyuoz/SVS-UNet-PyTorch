@@ -30,7 +30,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--model_path'    , type=str, required = True)
 parser.add_argument('--tar'           , type=str, required = True)
 parser.add_argument('--mixture_folder', type=str, required = True)
-parser.add_argument('--vocal_solo'    , type=int,  default = 1, help="輸出頻譜圖將只有人聲")
+parser.add_argument('--vocal_solo'    , type=int, default = 1, help="輸出頻譜圖將只有人聲")
 args = parser.parse_args()
 
 if not os.path.exists(args.tar):
@@ -44,8 +44,7 @@ model = UNet()
 model.to(device)
 try:
     checkpoint = torch.load(args.model_path, map_location=device)
-    if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
-        model.load_state_dict(checkpoint['model_state_dict'])
+    model.load_state_dict(checkpoint['model_state_dict'])
 except Exception as e:
     print(f"載入模型失敗: {e}")
     exit(1)
@@ -138,7 +137,7 @@ python data.py \
     --direction to_spec
 
 python inference.py \
-    --model_path CKPT/svs_L1_1.pth \
+    --model_path CKPT/svs_attn_grad_clip_best.pth \
     --mixture_folder custom_result/spec/mixture \
     --tar custom_result/spec/pred_spec \
     --vocal_solo 0
@@ -170,7 +169,7 @@ python data.py \
 +----------------------+
 
 python inference.py \
-    --model_path CKPT/svs_attn_test.pth \
+    --model_path CKPT/svs_attn_grad_clip_best.pth \
     --mixture_folder unet_spectrograms/test/mixture \
     --tar test_results/spec \
     --vocal_solo 1
