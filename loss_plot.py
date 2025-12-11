@@ -5,7 +5,7 @@ import sys
 import torch
 
 # --- 設定輸入檔案名稱 ---
-CKPT_FILE_NAME = 'CKPT/svs_attn_grad_clip.pth'
+CKPT_FILE_NAME = 'CKPT/svs_ag_mid_aug.pth'
 checkpoint = torch.load(CKPT_FILE_NAME)
 train_loss_history = checkpoint.get('train_loss_history')
 valid_loss_history = checkpoint.get('valid_loss_history')
@@ -48,7 +48,7 @@ def plot_losses(train_loss_history, valid_loss_history):
     # 畫 Val Loss (加上 marker 以便觀察確切落點)
     plt.plot(val_x, valid_loss_history, label='Valid Loss', color='red', marker='o', linestyle='--', markersize=3)
 
-    plt.title(f'Loss History (Val Interval: {interval})')
+    plt.title(f'{CKPT_FILE_NAME} Loss History')
     plt.xlabel('Steps / Epochs')
     plt.ylabel('Loss')
     plt.legend()

@@ -11,8 +11,7 @@ from utils import *
 # 忽略不必要的警告
 warnings.filterwarnings("ignore")
 
-def num2str(n):
-    return str(n).zfill(4)
+def num2str(n): return str(n).zfill(4)
 
 # =========================================================================================
 # 1. 參數設定
@@ -26,11 +25,6 @@ parser.add_argument('--hop_size', type = int, default = HOP_SIZE)
 parser.add_argument('--sr',       type = int, default = SAMPLE_RATE)
 parser.add_argument('--direction',            default = "to_spec", choices = ["to_spec", "to_wave"])
 args = parser.parse_args()
-
-# # 準備 PyTorch 設備與窗函數
-# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# # 建立 Hann Window (與 librosa 預設一致)，並移至對應設備
-# torch_window = torch.hann_window(args.win_size).to(device)
 
 # =========================================================================================
 # 2. 轉換邏輯

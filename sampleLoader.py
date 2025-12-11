@@ -10,127 +10,181 @@ from utils import *
 
 warnings.filterwarnings("ignore")
 
-class DynamicDataset(Data.Dataset):
-    def __init__(
-    		self, path_to_wav_root, split='train',
-      		samples_per_song=SAMPLES_PER_SONG, win_size=WINDOW_SIZE, hop_size=HOP_SIZE, sr=SAMPLE_RATE
-        ):
-        """
-        path_to_wav_root: 原始 WAV 資料集的根目錄 (例如: musdb_wav/)
-        split: 'train' 或 'valid'
-        samples_per_epoch: 每個 Epoch 總共要生成多少筆資料
-        """
-        self.path = os.path.join(path_to_wav_root, split)
-        self.win_size = win_size
-        self.hop_size = hop_size
-        self.sr = sr
-        self.target_len = INPUT_LEN
+# class DynamicDataset(Data.Dataset):
+#     def __init__(
+#     		self, path_to_wav_root, split='train',
+#       		samples_per_song=SAMPLES_PER_SONG, win_size=WINDOW_SIZE, hop_size=HOP_SIZE, sr=SAMPLE_RATE
+#         ):
+#         """
+#         path_to_wav_root: 原始 WAV 資料集的根目錄 (例如: musdb_wav/)
+#         split: 'train' 或 'valid'
+#         samples_per_epoch: 每個 Epoch 總共要生成多少筆資料
+#         """
+#         self.path = os.path.join(path_to_wav_root, split)
+#         self.win_size = win_size
+#         self.hop_size = hop_size
+#         self.sr = sr
+#         self.target_len = INPUT_LEN
         
-        # 掃描所有歌曲資料夾
-        self.song_dirs = sorted([
-            os.path.join(self.path, d)
-            for d in os.listdir(self.path) 
-            if os.path.isdir(os.path.join(self.path, d))
-        ])
-        self.samples_per_epoch = samples_per_song * len(self.song_dirs)
+#         # 掃描所有歌曲資料夾
+#         self.song_dirs = sorted([
+#             os.path.join(self.path, d)
+#             for d in os.listdir(self.path) 
+#             if os.path.isdir(os.path.join(self.path, d))
+#         ])
+#         self.samples_per_epoch = samples_per_song * len(self.song_dirs)
         
-        # 讀取所有 WAV 檔案的路徑
-        self.song_file_info = []
-        for song_dir in self.song_dirs:
-            mix_path = os.path.join(song_dir, 'mixture.wav')
-            voc_path = os.path.join(song_dir, 'vocals.wav')
-            if os.path.exists(mix_path) and os.path.exists(voc_path):
-                self.song_file_info.append({'mix': mix_path, 'voc': voc_path})
+#         # 讀取所有 WAV 檔案的路徑
+#         self.song_file_info = []
+#         for song_dir in self.song_dirs:
+#             mix_path = os.path.join(song_dir, 'mixture.wav')
+#             voc_path = os.path.join(song_dir, 'vocals.wav')
+#             if os.path.exists(mix_path) and os.path.exists(voc_path):
+#                 self.song_file_info.append({'mix': mix_path, 'voc': voc_path})
             
-        print(f"Scanning complete. Found {len(self.song_file_info)} valid songs for '{split}'.")
-        if len(self.song_file_info) < 2: print("警告：歌曲數量不足，無法執行 Dynamic Remixing。")
+#         print(f"Scanning complete. Found {len(self.song_file_info)} valid songs for '{split}'.")
+#         if len(self.song_file_info) < 2: print("警告：歌曲數量不足，無法執行 Dynamic Remixing。")
 
-    def __len__(self):
-        # 每個 Epoch 總共生成 samples_per_epoch 筆資料
-        return self.samples_per_epoch
+#     def __len__(self):
+#         # 每個 Epoch 總共生成 samples_per_epoch 筆資料
+#         return self.samples_per_epoch
 
-    def __getitem__(self, idx):
-        # 隨機選取 Base Song (提供 Vocal) 和 Remix Song (提供 Accompaniment)
-        indices = random.sample(range(len(self.song_file_info)), 2)
-        base_song = self.song_file_info[indices[0]]
-        remix_song = self.song_file_info[indices[1]]
+#     def __getitem__(self, idx):
+#         # 隨機選取 Base Song (提供 Vocal) 和 Remix Song (提供 Accompaniment)
+#         indices = random.sample(range(len(self.song_file_info)), 2)
+#         base_song = self.song_file_info[indices[0]]
+#         remix_song = self.song_file_info[indices[1]]
         
-        # --- I. 載入波形並計算 Accompaniment (處理長度差異) ---
+#         # --- I. 載入波形並計算 Accompaniment (處理長度差異) ---
         
-        # 載入 Base Song (提供 Vocal)
-        y_mix_base, _ = librosa.load(base_song['mix'], sr=self.sr, mono=True)
-        y_voc_base, _ = librosa.load(base_song['voc'], sr=self.sr, mono=True)
+#         # 載入 Base Song (提供 Vocal)
+#         y_mix_base, _ = librosa.load(base_song['mix'], sr=self.sr, mono=True)
+#         y_voc_base, _ = librosa.load(base_song['voc'], sr=self.sr, mono=True)
         
-        # 載入 Remix Song (提供 Accompaniment)
-        y_mix_remix, _ = librosa.load(remix_song['mix'], sr=self.sr, mono=True)
-        y_voc_remix, _ = librosa.load(remix_song['voc'], sr=self.sr, mono=True)
+#         # 載入 Remix Song (提供 Accompaniment)
+#         y_mix_remix, _ = librosa.load(remix_song['mix'], sr=self.sr, mono=True)
+#         y_voc_remix, _ = librosa.load(remix_song['voc'], sr=self.sr, mono=True)
         
-        # 計算 Acc 波形 (Acc = Mix - Voc)
-        y_acc_base = y_mix_base - y_voc_base
-        y_acc_remix = y_mix_remix - y_voc_remix
+#         # 計算 Acc 波形 (Acc = Mix - Voc)
+#         y_acc_base = y_mix_base - y_voc_base
+#         y_acc_remix = y_mix_remix - y_voc_remix
         
-        # --- II. Data Augmentation ---
+#         # --- II. Data Augmentation ---
         
-        # 1. Pitch Shifting (+/- 3 semitones)
-        y_voc_final = y_voc_base
-        if random.random() < 0.5:
-            semitones = random.uniform(-3.0, 3.0)
-            y_voc_final = librosa.effects.pitch_shift(y_voc_final, sr=self.sr, n_steps=semitones, **{'res_type': 'soxr_hq'})
+#         # 1. Pitch Shifting (+/- 3 semitones)
+#         y_voc_final = y_voc_base
+#         if random.random() < 0.5:
+#             semitones = random.uniform(-3.0, 3.0)
+#             y_voc_final = librosa.effects.pitch_shift(y_voc_final, sr=self.sr, n_steps=semitones, **{'res_type': 'soxr_hq'})
             
-        # 2. Dynamic Remixing (50% 機率使用 Base Acc, 50% 使用 Remix Acc)
-        if random.random() < 0.5 and indices[0] != indices[1]:
-            # 使用 Remix Acc: 必須先對齊長度
-            min_len_acc = min(len(y_voc_final), len(y_acc_remix))
-            y_acc_final = y_acc_remix[:min_len_acc]
-            y_voc_final = y_voc_final[:min_len_acc] # 對齊 Vocal
-        else:
-            # 使用 Base Acc: 必須先對齊長度
-            min_len_acc = min(len(y_voc_final), len(y_acc_base))
-            y_acc_final = y_acc_base[:min_len_acc]
-            y_voc_final = y_voc_final[:min_len_acc] # 對齊 Vocal
+#         # 2. Dynamic Remixing (50% 機率使用 Base Acc, 50% 使用 Remix Acc)
+#         if random.random() < 0.5 and indices[0] != indices[1]:
+#             # 使用 Remix Acc: 必須先對齊長度
+#             min_len_acc = min(len(y_voc_final), len(y_acc_remix))
+#             y_acc_final = y_acc_remix[:min_len_acc]
+#             y_voc_final = y_voc_final[:min_len_acc] # 對齊 Vocal
+#         else:
+#             # 使用 Base Acc: 必須先對齊長度
+#             min_len_acc = min(len(y_voc_final), len(y_acc_base))
+#             y_acc_final = y_acc_base[:min_len_acc]
+#             y_voc_final = y_voc_final[:min_len_acc] # 對齊 Vocal
             
-        # 最終混合
-        y_mix_final = y_voc_final + y_acc_final
+#         # 最終混合
+#         y_mix_final = y_voc_final + y_acc_final
         
-        # --- III. Segmenting & STFT (裁切和轉換) ---
+#         # --- III. Segmenting & STFT (裁切和轉換) ---
         
-        total_samples = len(y_mix_final)
-        start_sample = random.randint(0, total_samples - self.target_len)
+#         total_samples = len(y_mix_final)
+#         start_sample = random.randint(0, total_samples - self.target_len)
         
-        # 裁切波形 Segment
-        y_mix_crop = y_mix_final[start_sample : start_sample + self.target_len]
-        y_voc_crop = y_voc_final[start_sample : start_sample + self.target_len]
+#         # 裁切波形 Segment
+#         y_mix_crop = y_mix_final[start_sample : start_sample + self.target_len]
+#         y_voc_crop = y_voc_final[start_sample : start_sample + self.target_len]
         
-        # 轉換為 Spectrogram
-        stft_mix = librosa.stft(y_mix_crop, n_fft=self.win_size, hop_length=self.hop_size)
-        stft_voc = librosa.stft(y_voc_crop, n_fft=self.win_size, hop_length=self.hop_size)
+#         # 轉換為 Spectrogram
+#         stft_mix = librosa.stft(y_mix_crop, n_fft=self.win_size, hop_length=self.hop_size)
+#         stft_voc = librosa.stft(y_voc_crop, n_fft=self.win_size, hop_length=self.hop_size)
         
-        spec_mix = np.abs(stft_mix).astype(np.float32)
-        spec_voc = np.abs(stft_voc).astype(np.float32)
+#         spec_mix = np.abs(stft_mix).astype(np.float32)
+#         spec_voc = np.abs(stft_voc).astype(np.float32)
         
-        # Normalization
-        norm = spec_mix.max()
-        if norm == 0: norm = 1
+#         # Normalization
+#         norm = spec_mix.max()
+#         if norm == 0: norm = 1
         
-        spec_mix /= norm
-        spec_voc /= norm
+#         spec_mix /= norm
+#         spec_voc /= norm
 
-        # 移除 DC component (513 -> 512)
-        mix_crop = spec_mix[1:, :]
-        voc_crop = spec_voc[1:, :]
+#         # 移除 DC component (513 -> 512)
+#         mix_crop = spec_mix[1:, :]
+#         voc_crop = spec_voc[1:, :]
         
-        # 轉 Tensor (1, 512, 128)
-        mix_tensor = torch.from_numpy(mix_crop[np.newaxis, :, :].astype(np.float32))
-        voc_tensor = torch.from_numpy(voc_crop[np.newaxis, :, :].astype(np.float32))
+#         # 轉 Tensor (1, 512, 128)
+#         mix_tensor = torch.from_numpy(mix_crop[np.newaxis, :, :].astype(np.float32))
+#         voc_tensor = torch.from_numpy(voc_crop[np.newaxis, :, :].astype(np.float32))
         
-        return mix_tensor, voc_tensor
+#         return mix_tensor, voc_tensor
+
+# class SpectrogramDataset(Data.Dataset):
+#     def __init__(self, path, samples_per_song=SAMPLES_PER_SONG):
+#         self.path = path
+#         self.mixture_path = os.path.join(path, 'mixture')
+#         self.vocal_path = os.path.join(path, 'vocal')
+#         self.samples_per_song = samples_per_song
+
+#         if not os.path.exists(self.mixture_path):
+#             raise FileNotFoundError(f"找不到 Mixture 資料夾: {self.mixture_path}")
+
+#         # 讀取所有檔名
+#         self.file_names = sorted([f for f in os.listdir(self.mixture_path) if f.endswith('_spec.npy')])
+        
+#         # 確保對應檔案存在
+#         self.file_names = [f for f in self.file_names if os.path.exists(os.path.join(self.vocal_path, f))]
+        
+#         print(f"[{os.path.basename(path)}] 載入 {len(self.file_names)} 首歌曲，每輪採樣 {self.samples_per_song} 次，共 {len(self)} 筆資料。")
+
+#     def __len__(self):
+#         # 讓 Dataset 的長度變長 (歌曲數 * 每首歌採樣次數)
+#         return len(self.file_names) * self.samples_per_song
+
+#     def __getitem__(self, idx):
+#         # 透過取餘數來決定現在要讀哪首歌
+#         file_name = self.file_names[idx % len(self.file_names)]
+        
+#         # 1. 讀取 .npy
+#         mix = np.load(os.path.join(self.mixture_path, file_name))
+#         voc = np.load(os.path.join(self.vocal_path, file_name))
+
+#         # 2. 裁切頻率 (513 -> 512)
+#         mix = mix[1:, :]
+#         voc = voc[1:, :]
+
+#         # 3. 隨機裁切時間軸 (Time -> 128)
+#         target_len = INPUT_LEN
+#         curr_len = mix.shape[1]
+        
+#         start = random.randint(0, curr_len - target_len)
+#         mix = mix[:, start:start + target_len]
+#         voc = voc[:, start:start + target_len]
+
+#         # 4. 轉 Tensor
+#         mix = torch.from_numpy(mix[np.newaxis, :, :].astype(np.float32))
+#         voc = torch.from_numpy(voc[np.newaxis, :, :].astype(np.float32))
+        
+#         return mix, voc
+
+import torch.nn.functional as F
 
 class SpectrogramDataset(Data.Dataset):
-    def __init__(self, path, samples_per_song=SAMPLES_PER_SONG):
+    def __init__(self, path, samples_per_song=SAMPLES_PER_SONG, augment=False):
+        """
+        augment: bool, 是否啟用資料增強 (Pitch Shift & Time Stretch)
+        """
         self.path = path
         self.mixture_path = os.path.join(path, 'mixture')
         self.vocal_path = os.path.join(path, 'vocal')
         self.samples_per_song = samples_per_song
+        self.augment = augment # [新增] Augmentation 開關
 
         if not os.path.exists(self.mixture_path):
             raise FileNotFoundError(f"找不到 Mixture 資料夾: {self.mixture_path}")
@@ -141,7 +195,8 @@ class SpectrogramDataset(Data.Dataset):
         # 確保對應檔案存在
         self.file_names = [f for f in self.file_names if os.path.exists(os.path.join(self.vocal_path, f))]
         
-        print(f"[{os.path.basename(path)}] 載入 {len(self.file_names)} 首歌曲，每輪採樣 {self.samples_per_song} 次，共 {len(self)} 筆資料。")
+        mode_str = "Train (w/ Aug)" if augment else "Valid"
+        print(f"[{os.path.basename(path)}] [{mode_str}] 載入 {len(self.file_names)} 首歌曲，每輪採樣 {self.samples_per_song} 次。")
 
     def __len__(self):
         # 讓 Dataset 的長度變長 (歌曲數 * 每首歌採樣次數)
@@ -151,31 +206,78 @@ class SpectrogramDataset(Data.Dataset):
         # 透過取餘數來決定現在要讀哪首歌
         file_name = self.file_names[idx % len(self.file_names)]
         
-        # 1. 讀取 .npy
+        # 1. 讀取 .npy (Shape: 513, T)
         mix = np.load(os.path.join(self.mixture_path, file_name))
         voc = np.load(os.path.join(self.vocal_path, file_name))
 
-        # 2. 裁切頻率 (513 -> 512)
+        # 2. 裁切頻率 DC (513 -> 512)，在 Augmentation 前先切成 512，方便計算
         mix = mix[1:, :]
         voc = voc[1:, :]
-
-        # 3. 隨機裁切時間軸 (Time -> 128)
-        target_len = INPUT_LEN
-        curr_len = mix.shape[1]
         
-        if curr_len > target_len:
+        scale_f = 1.0
+        scale_t = 1.0
+        # --- Data Augmentation --- 論文設定: +/- 30% (scale factor 0.7 ~ 1.3)
+        if self.augment:
+            scale_f = random.uniform(0.7, 1.3) # 頻率軸縮放 (Pitch Shift)
+            scale_t = random.uniform(0.7, 1.3) # 時間軸縮放 (Time Stretch)
+            
+        # --- 3. 處理時間軸 (Time Stretch + Random Crop) ---
+        target_width = INPUT_LEN # 128
+        
+        # 根據縮放比例計算「需要從原始資料切多長」
+        # 例如: 若 scale_t = 0.5 (變慢/拉長)，我們只需要切 64 (128*0.5) 原圖，拉長後就是 128
+        crop_width = int(target_width * scale_t)
+        
+        curr_len = mix.shape[1]
+        if curr_len > crop_width:
             # 隨機選一個起點
-            start = random.randint(0, curr_len - target_len)
-            mix = mix[:, start:start + target_len]
-            voc = voc[:, start:start + target_len]
+            start = random.randint(0, curr_len - crop_width)
+            mix_crop = mix[:, start:start + crop_width]
+            voc_crop = voc[:, start:start + crop_width]
         else:
             # Padding
-            pad_width = target_len - curr_len
-            mix = np.pad(mix, ((0, 0), (0, pad_width)), mode='constant')
-            voc = np.pad(voc, ((0, 0), (0, pad_width)), mode='constant')
+            pad_width = crop_width - curr_len
+            mix_crop = np.pad(mix, ((0, 0), (0, pad_width)), mode='constant')
+            voc_crop = np.pad(voc, ((0, 0), (0, pad_width)), mode='constant')
 
-        # 4. 轉 Tensor
-        mix = torch.from_numpy(mix[np.newaxis, :, :].astype(np.float32))
-        voc = torch.from_numpy(voc[np.newaxis, :, :].astype(np.float32))
-        
+        # --- 4. 執行縮放 (Interpolation) ---
+        # 只有當比例不為 1.0 時才需要做插值運算，節省資源
+        if self.augment and (scale_f != 1.0 or scale_t != 1.0):
+            # 準備 Tensor (Interpolate 需要 Batch & Channel 維度: B, C, H, W)
+            # 目前 shape: (512, crop_width) -> (1, 1, 512, crop_width)
+            mix_tensor = torch.from_numpy(mix_crop).unsqueeze(0).unsqueeze(0)
+            voc_tensor = torch.from_numpy(voc_crop).unsqueeze(0).unsqueeze(0)
+            
+            # 計算目標高度 (Freq)
+            target_height_raw = int(512 * scale_f)
+            
+            # 執行雙線性插值 (Bilinear Interpolation)，同時完成了 Time Stretch (resize 到 128) 和 Pitch Shift (resize Freq)
+            mix_resized = F.interpolate(mix_tensor, size=(target_height_raw, target_width), mode='bilinear', align_corners=False)
+            voc_resized = F.interpolate(voc_tensor, size=(target_height_raw, target_width), mode='bilinear', align_corners=False)
+            
+            # --- 5. 修復頻率維度 (Fix Frequency Dimension to 512) ---
+            if target_height_raw > 512: # 如果拉長了 (Pitch Up)，切掉多餘的高頻部分，保留低頻 (index 0~512)
+                mix_final = mix_resized[:, :, :512, :]
+                voc_final = voc_resized[:, :, :512, :]
+            elif target_height_raw < 512: # 如果壓扁了 (Pitch Down)，高頻補零
+                pad_h = 512 - target_height_raw
+                mix_final = F.pad(mix_resized, (0, 0, 0, pad_h), mode='constant', value=0) # pad 順序: (left, right, top, bottom)
+                voc_final = F.pad(voc_resized, (0, 0, 0, pad_h), mode='constant', value=0) # 我們要在 H 的尾端 (高頻) 補零，也就是 bottom
+            else:
+                mix_final = mix_resized
+                voc_final = voc_resized
+            
+            # 維度 -> (1, 512, 128)
+            mix = mix_final.squeeze(0)
+            voc = voc_final.squeeze(0)
+            
+            # 確保型態
+            mix = mix.float()
+            voc = voc.float()
+
+        else:
+            # 如果沒有 Augmentation，直接轉 Tensor 並增加 Channel 維度
+            mix = torch.from_numpy(mix_crop[np.newaxis, :, :].astype(np.float32))
+            voc = torch.from_numpy(voc_crop[np.newaxis, :, :].astype(np.float32))
+
         return mix, voc

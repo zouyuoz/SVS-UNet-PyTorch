@@ -189,7 +189,7 @@ def debug_inference(model_path, spec_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_path', type=str, default='CKPT/svs_attn_gate.pth')
+    parser.add_argument('--model_path', type=str, default='CKPT/svs_ag_mid_best.pth')
     parser.add_argument('--spec_path' , type=str, required=True, help="Path to the MIXTURE spectrogram")
     args = parser.parse_args()
     

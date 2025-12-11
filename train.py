@@ -8,7 +8,7 @@ import os
 from tqdm import tqdm
 import random
 from utils import *
-from sampleLoader import DynamicDataset, SpectrogramDataset
+from sampleLoader import SpectrogramDataset
 
 """
     SVS-UNet Training Script with Validation
@@ -53,7 +53,7 @@ WAV_ROOT = '.MUSDB18/'
 
 # 替換 Train Loader
 train_loader = Data.DataLoader(
-    dataset = SpectrogramDataset(path=args.train_folder, samples_per_song=SAMPLES_PER_SONG),
+    dataset = SpectrogramDataset(path=args.train_folder, samples_per_song=SAMPLES_PER_SONG, augment=True),
     batch_size=args.batch_size, num_workers=8, shuffle=True, pin_memory=True
 )
 
@@ -75,34 +75,34 @@ start_epoch = 0
 # =========================================================================================
 # Load Checkpoint
 # =========================================================================================
-# if os.path.exists(args.load_path):
-#     print(f"Loading checkpoint from {args.load_path}")
-#     checkpoint = torch.load(args.load_path, map_location=device)
+if os.path.exists(args.load_path):
+    print(f"Loading checkpoint from {args.load_path}")
+    checkpoint = torch.load(args.load_path, map_location=device)
     
-#     # 1. 載入模型權重
-#     model.load_state_dict(checkpoint['model_state_dict'])
+    # 1. 載入模型權重
+    model.load_state_dict(checkpoint['model_state_dict'])
     
-#     # 2. 載入優化器狀態
-#     if 'optim' in checkpoint:
-#         model.optim.load_state_dict(checkpoint['optim'])
+    # 2. 載入優化器狀態
+    if 'optim' in checkpoint:
+        model.optim.load_state_dict(checkpoint['optim'])
         
-#     # 3. 載入 Epoch (接續訓練關鍵)
-#     start_epoch = checkpoint.get('epoch', 0)
+    # 3. 載入 Epoch (接續訓練關鍵)
+    start_epoch = checkpoint.get('epoch', 0)
     
-#     # 4. 載入 Scheduler (如果有)
-#     if scheduler is not None and 'scheduler' in checkpoint and checkpoint['scheduler'] is not None:
-#         scheduler.load_state_dict(checkpoint['scheduler'])
+    # 4. 載入 Scheduler (如果有)
+    if scheduler is not None and 'scheduler' in checkpoint and checkpoint['scheduler'] is not None:
+        scheduler.load_state_dict(checkpoint['scheduler'])
         
-#     # 5. [修改] 載入 Loss History & 恢復 Best Loss
-#     if 'train_loss_history' in checkpoint:
-#         train_loss_history = checkpoint['train_loss_history']
+    # 5. [修改] 載入 Loss History & 恢復 Best Loss
+    if 'train_loss_history' in checkpoint:
+        train_loss_history = checkpoint['train_loss_history']
         
-#     if 'valid_loss_history' in checkpoint:
-#         valid_loss_history = checkpoint['valid_loss_history']
-#         # [關鍵] 從歷史紀錄中恢復最佳 loss，否則會被重置為 100
-#         if len(valid_loss_history) > 0:
-#             best_val_loss = min(valid_loss_history)
-#             print(f"Restored best_val_loss: {best_val_loss:.6f}")
+    if 'valid_loss_history' in checkpoint:
+        valid_loss_history = checkpoint['valid_loss_history']
+        # [關鍵] 從歷史紀錄中恢復最佳 loss，否則會被重置為 100
+        if len(valid_loss_history) > 0:
+            best_val_loss = min(valid_loss_history)
+            print(f"Restored best_val_loss: {best_val_loss:.6f}")
 
 # =========================================================================================
 # 3. Main Loop
@@ -183,11 +183,11 @@ print("Finish training!")
 python train.py \
     --train_folder unet_spectrograms/train \
     --valid_folder unet_spectrograms/valid \
-    --label attn_gate \
+    --label ag_mid_aug \
     --batch_size 32 \
-    --epoch 100 \
+    --epoch 500 \
     --val_interval 10 \
-    --load_path CKPT/svs_attn_test.pth
+    --load_path CKPT/svs_attn_gate.pth
     
 想法：
 
