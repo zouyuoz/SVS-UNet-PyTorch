@@ -67,7 +67,8 @@ model = UNet()
 model.to(device)
 
 best_val_loss = 100.
-log_buffer = []
+train_loss_history = []
+valid_loss_history = []
 scheduler = None
 start_epoch = 0
 
@@ -121,20 +122,18 @@ for ep in range(start_epoch, args.epoch):
     #     print(f"\n[Info] Epoch {ep}: Learning rate manually changed to {new_lr}!\n")
     
     for i, (mix, voc) in enumerate(loop):
-        mix, voc = mix.to(device), voc.to(device)
-        model.backward(mix, voc) # backward 內含 zero_grad, forward, loss, optim.step
         
-        # 取得當前 batch loss
-        loss_dict = model.getLoss()
-        current_loss = loss_dict.get('loss_list_total', 0)
+        mix, voc = mix.to(device), voc.to(device)
+        current_loss = model.backward(mix, voc)
         train_loss_sum += current_loss
         
         loop.set_postfix(loss=current_loss)
     
     avg_train_loss = train_loss_sum / len(train_loader)
-    log_buffer.append(f"{avg_train_loss}\n")
+    train_loss_history.append(avg_train_loss)
     
     # --- Validation Phase (Every 10 epochs) ---
+    avg_val_loss = 1000.
     if valid_loader and (ep + 1) % args.val_interval == 0:
         model.eval() # 切換到評估模式 (關閉 Dropout, BatchNorm 變動)
         val_loss_sum = 0
@@ -152,21 +151,13 @@ for ep in range(start_epoch, args.epoch):
                 val_loss_sum += loss.item()
         
         avg_val_loss = val_loss_sum / len(valid_loader)
-        log_buffer.append(f"Val {avg_val_loss}\n")
-        print(f"\n[Epoch {ep+1}] Train Loss: {avg_train_loss:.6f} | Val Loss: {avg_val_loss:.6f}")
+        valid_loss_history.append(avg_val_loss)
         
         if avg_val_loss < best_val_loss:
-            model.save(best_weight)
+            best_val_loss = avg_val_loss
             
-        # [新增] 觸發 Validation 時，將累積的 Buffer 寫入 log.txt
-        try:
-            with open(log_file, 'a') as f:
-                f.writelines(log_buffer)
-            print(f"已將 {len(log_buffer)} 筆 Loss 紀錄寫入 {log_file}")
-            log_buffer = [] # 清空 Buffer
-        except Exception as e:
-            print(f"寫入 {log_file} 失敗: {e}")
-    
+        print(f"\n[Epoch {ep+1}] Train Loss: {avg_train_loss:.6f} | Val Loss: {avg_val_loss:.6f}")
+        
     else:
         # 平常只印 Train Loss
         print(f"Epoch {ep+1} Avg Loss: {avg_train_loss:.6f}")
@@ -177,20 +168,12 @@ for ep in range(start_epoch, args.epoch):
         'model_state_dict': model.state_dict(),    # 模型權重
         'optim': model.optim.state_dict(),         # 優化器狀態 (包含 momentum 等資訊)
         'scheduler': scheduler.state_dict() if scheduler is not None else None, # 排程器狀態
+        'train_loss_history': train_loss_history,
+        'valid_loss_history': valid_loss_history
     }
-
-    # 為了保持與舊版相容，我們也把 loss history 存進去
-    for key in model.__dict__:
-        if key.startswith('loss_list'):
-            checkpoint[key] = getattr(model, key)
-
-    # 執行儲存
+    
     torch.save(checkpoint, ckpt_weight)
-
-if log_buffer:
-    with open(log_file, 'a') as f:
-        f.writelines(log_buffer)
-    print(f"剩餘 Log 已寫入 {log_file}")
+    if avg_val_loss < best_val_loss: torch.save(checkpoint, best_weight)
 
 print("Finish training!")
 

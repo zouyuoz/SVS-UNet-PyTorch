@@ -169,9 +169,6 @@ class UNet(nn.Module):
             nn.Dropout2d(0.5)
         )
         self.deconv6 = nn.ConvTranspose2d(32, 1, kernel_size=(5, 5), stride=(2, 2), padding=2)
-
-        # Define loss list
-        self.loss_list_total = []
         
         self.optim = torch.optim.Adam(self.parameters(), lr=5e-3)
         self.crit = nn.L1Loss()
@@ -214,18 +211,6 @@ class UNet(nn.Module):
     # ==============================================================================
     #   Set & Get
     # ==============================================================================
-    def getLoss(self, normalize=False):
-        loss_dict = {}
-        for key in self.__dict__:
-            if 'loss_list' in key:
-                val = getattr(self, key)
-                if len(val) > 0:
-                    if not normalize:
-                        loss_dict[key] = round(val[-1], 6)
-                    else:
-                        loss_dict[key] = np.mean(val)
-        return loss_dict
-
     def forward(self, mix):
         """
             Generate the mask for the given mixture audio spectrogram
@@ -285,11 +270,6 @@ class UNet(nn.Module):
         msk = self.forward(mix)
         
         loss = self.crit(voc, mix, msk)
-        
-        # self.loss_list_vocal.append(loss_v.item())
-        # self.loss_list_accomp.append(loss_a.item())
-        self.loss_list_total.append(loss.item())
-        
         loss.backward()
         self.optim.step()
         return loss.item()
