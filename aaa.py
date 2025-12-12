@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 import os
 import argparse
 import librosa
-from model_old import UNet
+# from model_old import UNet
 # from model import UNet
-# from model_AG import UNet
+from model_AG import UNet
 from utils import *
 import warnings
 
@@ -196,7 +196,7 @@ def debug_inference(model_path, spec_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_path', type=str, default='CKPT/svs_vanilla.pth')
+    parser.add_argument('--model_path', type=str, default='CKPT/svs_ag1.pth')
     parser.add_argument('--spec_path' , type=str, required=True, help="Path to the MIXTURE spectrogram")
     args = parser.parse_args()
     

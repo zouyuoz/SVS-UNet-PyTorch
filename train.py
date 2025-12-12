@@ -1,6 +1,6 @@
 # from model import UNet
-# from model_AG import UNet
-from model_old import UNet
+from model_AG import UNet
+# from model_old import UNet
 import torch.utils.data as Data
 import numpy as np
 import argparse
@@ -43,7 +43,6 @@ parser.add_argument('--load_path'   , type = str, default = 'NaN')
 
 args = parser.parse_args()
 
-log_file    = f'LOG/log_{args.label}.txt'
 best_weight = f'CKPT/svs_{args.label}_best.pth'
 ckpt_weight = f'CKPT/svs_{args.label}.pth'
 
@@ -54,7 +53,7 @@ WAV_ROOT = '.MUSDB18/'
 
 # 替換 Train Loader
 train_loader = Data.DataLoader(
-    dataset = SpectrogramDataset(path=args.train_folder, samples_per_song=SAMPLES_PER_SONG, augment=True),
+    dataset = SpectrogramDataset(path=args.train_folder, samples_per_song=SAMPLES_PER_SONG, augment=False),
     batch_size=args.batch_size, num_workers=8, shuffle=True, pin_memory=True
 )
 
@@ -104,6 +103,8 @@ if os.path.exists(args.load_path):
         if len(valid_loss_history) > 0:
             best_val_loss = min(valid_loss_history)
             print(f"Restored best_val_loss: {best_val_loss:.6f}")
+else:
+    print(f'found no {args.load_path}')
 
 # =========================================================================================
 # 3. Main Loop
@@ -180,15 +181,14 @@ for ep in range(start_epoch, args.epoch):
 print("Finish training!")
 
 """
-1208 midnight:
 python train.py \
     --train_folder unet_spectrograms/train \
     --valid_folder unet_spectrograms/valid \
-    --label vanilla_aug \
+    --label ag1 \
     --batch_size 32 \
     --epoch 500 \
     --val_interval 10 \
-    --load_path CKPT/svs_vanilla_aug.pth
+    --load_path CKPT/svs_ag1.pth
     
 想法：
 

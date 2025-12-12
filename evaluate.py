@@ -208,65 +208,95 @@ python evaluate.py \
     --ref test_results/gt_vocal_wav_low \
     --mix test_results/gt_mixture_wav_low
 ---
-svs_best_val: 2.2913
 
-svs_vanilla: 
-====== 人聲 (Vocals) 評估結果 (平均值) ======
-SDR: 4.3780  dB  (整體品質)
-SIR: 15.3448 dB  (分離乾淨度/去伴奏能力)
-SAR: 5.5292  dB  (無雜音程度/自然度)
+svs_vanilla:
 
-svs_1206:
-====== 人聲 (Vocals) 評估結果 (平均值) ======
-SDR: 2.4139  dB  (整體品質)
-SIR: 11.7054 dB  (分離乾淨度/去伴奏能力)
-SAR: 3.7478  dB  (無雜音程度/自然度)
-
-*svs_500:
-====== 人聲 (Vocals) 評估結果 (平均值) ======
-SDR: 4.3701  dB  (整體品質)
-SIR: 16.4115 dB  (分離乾淨度/去伴奏能力)
-SAR: 5.2707  dB  (無雜音程度/自然度)
-
-svs_1207:
-====== 人聲 (Vocals) 評估結果 (平均值) ======
-SDR: 2.5353  dB  (整體品質)
-SIR: 12.5568 dB  (分離乾淨度/去伴奏能力)
-SAR: 3.7224  dB  (無雜音程度/自然度)
-
-svs_1208:
-====== 人聲 (Vocals) 評估結果 (平均值) ======
-SDR: 3.0661 dB  (整體品質)
-SIR: 15.1832 dB  (分離乾淨度/去伴奏能力)
-SAR: 3.8998 dB  (無雜音程度/自然度)
-
-svs_L1_ft16:
-0000_AM Contra - He:    SDR=6.844 dB,   SIR=16.583 dB,  SAR=7.425 dB,   NSDR=12.067 dB
-0001_Al James - Sch:    SDR=3.926 dB,   SIR=12.405 dB,  SAR=4.834 dB,   NSDR=4.949 dB
-0002_Angels In Ampl:    SDR=6.628 dB,   SIR=13.808 dB,  SAR=7.727 dB,   NSDR=9.629 dB
-0003_Arise - Run Ru:    SDR=1.910 dB,   SIR=9.302 dB,   SAR=3.267 dB,   NSDR=10.154 dB
-0004_BKS - Bulldoze:    SDR=-8.336 dB,  SIR=0.165 dB,   SAR=-4.747 dB,  NSDR=5.646 dB
-0005_BKS - Too Much:    SDR=7.494 dB,   SIR=16.285 dB,  SAR=8.210 dB,   NSDR=12.134 dB
-0006_Ben Carrigan -:    SDR=0.888 dB,   SIR=16.469 dB,  SAR=1.106 dB,   NSDR=7.786 dB
-0007_Bobby Nobody -:    SDR=2.574 dB,   SIR=11.306 dB,  SAR=3.509 dB,   NSDR=8.592 dB
-0008_Buitraker - Re:    SDR=1.074 dB,   SIR=8.501 dB,   SAR=2.514 dB,   NSDR=10.749 dB
-0009_Carlos Gonzale:    SDR=2.556 dB,   SIR=12.836 dB,  SAR=3.203 dB,   NSDR=4.043 dB
-0010_Cristina Vane :    SDR=4.919 dB,   SIR=15.734 dB,  SAR=5.409 dB,   NSDR=9.518 dB
-0011_Detsky Sad - W:    SDR=1.006 dB,   SIR=6.804 dB,   SAR=3.156 dB,   NSDR=8.777 dB
-0012_Enda Reilly - :    SDR=5.559 dB,   SIR=15.378 dB,  SAR=6.161 dB,   NSDR=9.426 dB
-0013_Forkupines - S:    SDR=-0.220 dB,  SIR=16.141 dB,  SAR=-0.014 dB,  NSDR=9.548 dB
-0014_Georgia Wonder:    SDR=1.004 dB,   SIR=9.512 dB,   SAR=2.125 dB,   NSDR=7.974 dB
-0015_Girls Under Gl:    SDR=2.415 dB,   SIR=13.031 dB,  SAR=3.020 dB,   NSDR=12.971 dB
-0016_Hollow Ground :    SDR=3.530 dB,   SIR=13.698 dB,  SAR=4.151 dB,   NSDR=14.443 dB
-0017_James Elder & :    SDR=5.450 dB,   SIR=15.691 dB,  SAR=5.997 dB,   NSDR=8.623 dB
-0018_Juliet's Rescu:    SDR=4.501 dB,   SIR=16.680 dB,  SAR=4.864 dB,   NSDR=13.439 dB
-0019_Little Chicago:    SDR=4.412 dB,   SIR=11.470 dB,  SAR=5.663 dB,   NSDR=6.616 dB
+0000_AM Contra - He:    SDR=6.875 dB,   SIR=15.746 dB,  SAR=7.593 dB,   NSDR=12.098 dB
+0001_Al James - Sch:    SDR=4.170 dB,   SIR=11.982 dB,  SAR=5.223 dB,   NSDR=5.193 dB
+0002_Angels In Ampl:    SDR=6.753 dB,   SIR=13.445 dB,  SAR=7.993 dB,   NSDR=9.755 dB
+0003_Arise - Run Ru:    SDR=1.568 dB,   SIR=7.659 dB,   SAR=3.482 dB,   NSDR=9.812 dB
+0004_BKS - Bulldoze:    SDR=-6.464 dB,  SIR=1.212 dB,   SAR=-3.204 dB,  NSDR=7.519 dB
+0005_BKS - Too Much:    SDR=7.297 dB,   SIR=14.711 dB,  SAR=8.311 dB,   NSDR=11.937 dB
+0006_Ben Carrigan -:    SDR=1.562 dB,   SIR=14.267 dB,  SAR=1.961 dB,   NSDR=8.460 dB
+0007_Bobby Nobody -:    SDR=2.428 dB,   SIR=9.984 dB,   SAR=3.681 dB,   NSDR=8.445 dB
+0008_Buitraker - Re:    SDR=1.010 dB,   SIR=7.111 dB,   SAR=3.005 dB,   NSDR=10.685 dB
+0009_Carlos Gonzale:    SDR=2.863 dB,   SIR=11.682 dB,  SAR=3.759 dB,   NSDR=4.351 dB
+0010_Cristina Vane :    SDR=6.182 dB,   SIR=14.586 dB,  SAR=7.008 dB,   NSDR=10.782 dB
+0011_Detsky Sad - W:    SDR=0.417 dB,   SIR=5.506 dB,   SAR=3.104 dB,   NSDR=8.188 dB
+0012_Enda Reilly - :    SDR=6.142 dB,   SIR=14.396 dB,  SAR=7.001 dB,   NSDR=10.010 dB
+0013_Forkupines - S:    SDR=-0.333 dB,  SIR=13.636 dB,  SAR=0.029 dB,   NSDR=9.435 dB
+0014_Georgia Wonder:    SDR=0.881 dB,   SIR=8.146 dB,   SAR=2.403 dB,   NSDR=7.850 dB
+0015_Girls Under Gl:    SDR=2.113 dB,   SIR=11.642 dB,  SAR=2.914 dB,   NSDR=12.669 dB
+0016_Hollow Ground :    SDR=4.200 dB,   SIR=13.011 dB,  SAR=5.024 dB,   NSDR=15.113 dB
+0017_James Elder & :    SDR=5.501 dB,   SIR=13.623 dB,  SAR=6.412 dB,   NSDR=8.674 dB
+0018_Juliet's Rescu:    SDR=4.718 dB,   SIR=14.728 dB,  SAR=5.319 dB,   NSDR=13.657 dB
+0019_Little Chicago:    SDR=5.411 dB,   SIR=9.628 dB,   SAR=7.926 dB,   NSDR=7.615 dB
 
 === Overall Mean Metrics (vocal) ===
-Mean SDR : 2.907 dB (3.498)
-Mean SIR : 12.590 dB (13.244)
-Mean SAR : 3.879 dB (4.333)
-Mean NSDR: 9.354 dB (9.549)
+Mean SDR : 3.165 dB
+Mean SIR : 11.335 dB
+Mean SAR : 4.447 dB
+Mean NSDR: 9.612 dB
+
+svs_vanilla_aug:
+
+0000_AM Contra - He:    SDR=8.476 dB,   SIR=16.474 dB,  SAR=9.322 dB,   NSDR=13.699 dB
+0001_Al James - Sch:    SDR=3.766 dB,   SIR=12.059 dB,  SAR=4.725 dB,   NSDR=4.789 dB
+0002_Angels In Ampl:    SDR=6.973 dB,   SIR=15.016 dB,  SAR=7.849 dB,   NSDR=9.974 dB
+0003_Arise - Run Ru:    SDR=3.124 dB,   SIR=10.182 dB,  SAR=4.474 dB,   NSDR=11.368 dB
+0004_BKS - Bulldoze:    SDR=-7.817 dB,  SIR=6.416 dB,   SAR=-6.757 dB,  NSDR=6.166 dB
+0005_BKS - Too Much:    SDR=7.740 dB,   SIR=16.498 dB,  SAR=8.457 dB,   NSDR=12.381 dB
+0006_Ben Carrigan -:    SDR=0.155 dB,   SIR=16.696 dB,  SAR=0.344 dB,   NSDR=7.053 dB
+0007_Bobby Nobody -:    SDR=3.431 dB,   SIR=11.902 dB,  SAR=4.369 dB,   NSDR=9.449 dB
+0008_Buitraker - Re:    SDR=1.694 dB,   SIR=7.060 dB,   SAR=3.966 dB,   NSDR=11.369 dB
+0009_Carlos Gonzale:    SDR=3.759 dB,   SIR=11.418 dB,  SAR=4.878 dB,   NSDR=5.247 dB
+0010_Cristina Vane :    SDR=6.418 dB,   SIR=14.057 dB,  SAR=7.406 dB,   NSDR=11.017 dB
+0011_Detsky Sad - W:    SDR=1.755 dB,   SIR=7.941 dB,   SAR=3.598 dB,   NSDR=9.527 dB
+0012_Enda Reilly - :    SDR=6.337 dB,   SIR=14.505 dB,  SAR=7.207 dB,   NSDR=10.205 dB
+0013_Forkupines - S:    SDR=4.013 dB,   SIR=15.891 dB,  SAR=4.415 dB,   NSDR=13.781 dB
+0014_Georgia Wonder:    SDR=1.473 dB,   SIR=9.082 dB,   SAR=2.806 dB,   NSDR=8.442 dB
+0015_Girls Under Gl:    SDR=3.371 dB,   SIR=14.055 dB,  SAR=3.926 dB,   NSDR=13.926 dB
+0016_Hollow Ground :    SDR=4.076 dB,   SIR=11.720 dB,  SAR=5.179 dB,   NSDR=14.990 dB
+0017_James Elder & :    SDR=4.983 dB,   SIR=12.810 dB,  SAR=5.988 dB,   NSDR=8.157 dB
+0018_Juliet's Rescu:    SDR=5.643 dB,   SIR=15.954 dB,  SAR=6.176 dB,   NSDR=14.581 dB
+0019_Little Chicago:    SDR=5.106 dB,   SIR=8.238 dB,   SAR=8.605 dB,   NSDR=7.310 dB
+
+=== Overall Mean Metrics (vocal) ===
+Mean SDR : 3.724 dB
+Mean SIR : 12.399 dB
+Mean SAR : 4.847 dB
+Mean NSDR: 10.171 dB
+
+svs_ag:
+
+0000_AM Contra - He:    SDR=6.849 dB,   SIR=17.269 dB,  SAR=7.343 dB,   NSDR=12.073 dB
+0001_Al James - Sch:    SDR=3.843 dB,   SIR=12.265 dB,  SAR=4.768 dB,   NSDR=4.866 dB
+0002_Angels In Ampl:    SDR=6.889 dB,   SIR=14.347 dB,  SAR=7.906 dB,   NSDR=9.891 dB
+0003_Arise - Run Ru:    SDR=2.364 dB,   SIR=9.668 dB,   SAR=3.702 dB,   NSDR=10.607 dB
+0004_BKS - Bulldoze:    SDR=-7.901 dB,  SIR=0.807 dB,   SAR=-4.647 dB,  NSDR=6.082 dB
+0005_BKS - Too Much:    SDR=7.701 dB,   SIR=16.392 dB,  SAR=8.430 dB,   NSDR=12.341 dB
+0006_Ben Carrigan -:    SDR=0.936 dB,   SIR=14.018 dB,  SAR=1.324 dB,   NSDR=7.834 dB
+0007_Bobby Nobody -:    SDR=2.886 dB,   SIR=9.460 dB,   SAR=4.431 dB,   NSDR=8.903 dB
+0008_Buitraker - Re:    SDR=0.158 dB,   SIR=6.762 dB,   SAR=2.060 dB,   NSDR=9.833 dB
+0009_Carlos Gonzale:    SDR=3.437 dB,   SIR=11.436 dB,  SAR=4.488 dB,   NSDR=4.925 dB
+0010_Cristina Vane :    SDR=5.879 dB,   SIR=14.584 dB,  SAR=6.657 dB,   NSDR=10.479 dB
+0011_Detsky Sad - W:    SDR=0.172 dB,   SIR=4.865 dB,   SAR=3.198 dB,   NSDR=7.943 dB
+0012_Enda Reilly - :    SDR=6.310 dB,   SIR=14.996 dB,  SAR=7.076 dB,   NSDR=10.177 dB
+0013_Forkupines - S:    SDR=0.442 dB,   SIR=12.318 dB,  SAR=0.981 dB,   NSDR=10.209 dB
+0014_Georgia Wonder:    SDR=0.803 dB,   SIR=8.681 dB,   SAR=2.127 dB,   NSDR=7.772 dB
+0015_Girls Under Gl:    SDR=2.907 dB,   SIR=11.688 dB,  SAR=3.808 dB,   NSDR=13.463 dB
+0016_Hollow Ground :    SDR=3.364 dB,   SIR=12.263 dB,  SAR=4.213 dB,   NSDR=14.277 dB
+0017_James Elder & :    SDR=5.652 dB,   SIR=14.048 dB,  SAR=6.498 dB,   NSDR=8.825 dB
+0018_Juliet's Rescu:    SDR=4.871 dB,   SIR=15.353 dB,  SAR=5.402 dB,   NSDR=13.809 dB
+0019_Little Chicago:    SDR=5.843 dB,   SIR=10.925 dB,  SAR=7.795 dB,   NSDR=8.048 dB
+
+=== Overall Mean Metrics (vocal) ===
+Mean SDR : 3.170 dB
+Mean SIR : 11.607 dB
+Mean SAR : 4.378 dB
+Mean NSDR: 9.618 dB
+
+svs_...
 
 svs_ag_mid_aug_best:
 

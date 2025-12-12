@@ -5,7 +5,8 @@ import sys
 import torch
 
 # --- 設定輸入檔案名稱 ---
-CKPT_FILE_NAME = 'CKPT/svs_ag_tail_aug.pth'
+label = 'ag1'
+CKPT_FILE_NAME = f'CKPT/svs_{label}.pth'
 checkpoint = torch.load(CKPT_FILE_NAME)
 train_loss_history = checkpoint.get('train_loss_history')
 valid_loss_history = checkpoint.get('valid_loss_history')
@@ -58,8 +59,8 @@ def plot_losses(train_loss_history, valid_loss_history):
     # plt.show()
     
     # 如果你在 WSL 無法顯示視窗，請存成圖片
-    plt.savefig('output.png')
-    print("Plot saved to output.png")
+    plt.savefig(f'LOSS_CURVE/{CKPT_FILE_NAME[9:-4]}.png')
+    print(f"Plot saved to LOSS_CURVE/{CKPT_FILE_NAME[9:-4]}.png")
 
 
 # --- 執行分析 ---

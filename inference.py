@@ -170,7 +170,7 @@ python data.py \
 +----------------------+
 
 python inference.py \
-    --model_path CKPT/svs_vanilla.pth \
+    --model_path CKPT/svs_vanilla_aug.pth \
     --mixture_folder unet_spectrograms/test/mixture \
     --tar test_results/spec \
     --vocal_solo 1
