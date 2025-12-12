@@ -5,7 +5,7 @@ import sys
 import torch
 
 # --- 設定輸入檔案名稱 ---
-CKPT_FILE_NAME = 'CKPT/svs_ag_mid_aug.pth'
+CKPT_FILE_NAME = 'CKPT/svs_ag_tail_aug.pth'
 checkpoint = torch.load(CKPT_FILE_NAME)
 train_loss_history = checkpoint.get('train_loss_history')
 valid_loss_history = checkpoint.get('valid_loss_history')

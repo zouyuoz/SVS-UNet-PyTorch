@@ -183,11 +183,11 @@ print("Finish training!")
 python train.py \
     --train_folder unet_spectrograms/train \
     --valid_folder unet_spectrograms/valid \
-    --label ag_mid_aug \
-    --batch_size 32 \
-    --epoch 500 \
+    --label ag_tail_aug \
+    --batch_size 16 \
+    --epoch 1500 \
     --val_interval 10 \
-    --load_path CKPT/svs_attn_gate.pth
+    --load_path CKPT/svs_ag_mid_aug.pth
     
 想法：
 
