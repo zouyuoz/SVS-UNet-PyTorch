@@ -1,5 +1,5 @@
-# from model import UNet
-from model_AG import UNet
+# from model_AG import UNet
+from model_old import UNet
 import numpy as np
 import argparse
 import torch
@@ -138,7 +138,7 @@ python data.py \
     --direction to_spec
 
 python inference.py \
-    --model_path CKPT/svs_ag_mid_aug_best.pth \
+    --model_path CKPT/svs_ag_tail_aug_best.pth \
     --mixture_folder custom_result/spec/mixture \
     --tar custom_result/spec/pred_spec \
     --vocal_solo 0
@@ -170,7 +170,7 @@ python data.py \
 +----------------------+
 
 python inference.py \
-    --model_path CKPT/svs_ag_tail_aug_best.pth \
+    --model_path CKPT/svs_vanilla.pth \
     --mixture_folder unet_spectrograms/test/mixture \
     --tar test_results/spec \
     --vocal_solo 1

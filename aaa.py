@@ -4,11 +4,18 @@ import matplotlib.pyplot as plt
 import os
 import argparse
 import librosa
-# from model_old import UNet
+from model_old import UNet
 # from model import UNet
-from model_AG import UNet
+# from model_AG import UNet
 from utils import *
 import warnings
+
+"""
+這個程式會視覺化 "預測人聲" 與 "真實人聲"，並比較他們之間的差異 (紅色代表預測多、藍色代表預測少)
+使用方式：在終端機輸入
+python aaa.py --model_path <模型的.pth> --spec_path <歌曲mixture的頻譜圖>
+(模型的 pth 要能夠與從 model_XX import 的 UNet 一樣才能 load)
+"""
 
 warnings.filterwarnings("ignore")
 
@@ -189,7 +196,7 @@ def debug_inference(model_path, spec_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_path', type=str, default='CKPT/svs_ag_tail_aug.pth')
+    parser.add_argument('--model_path', type=str, default='CKPT/svs_vanilla.pth')
     parser.add_argument('--spec_path' , type=str, required=True, help="Path to the MIXTURE spectrogram")
     args = parser.parse_args()
     

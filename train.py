@@ -1,5 +1,6 @@
 # from model import UNet
-from model_AG import UNet
+# from model_AG import UNet
+from model_old import UNet
 import torch.utils.data as Data
 import numpy as np
 import argparse
@@ -38,7 +39,7 @@ parser.add_argument('--label'       , type = str, required = True)
 parser.add_argument('--batch_size'  , type = int, default = 8)
 parser.add_argument('--epoch'       , type = int, default = 10)
 parser.add_argument('--val_interval', type = int, default = 20)
-parser.add_argument('--load_path'   , type = str)
+parser.add_argument('--load_path'   , type = str, default = 'NaN')
 
 args = parser.parse_args()
 
@@ -183,11 +184,11 @@ print("Finish training!")
 python train.py \
     --train_folder unet_spectrograms/train \
     --valid_folder unet_spectrograms/valid \
-    --label ag_tail_aug \
-    --batch_size 16 \
-    --epoch 1500 \
+    --label vanilla_aug \
+    --batch_size 32 \
+    --epoch 500 \
     --val_interval 10 \
-    --load_path CKPT/svs_ag_mid_aug.pth
+    --load_path CKPT/svs_vanilla_aug.pth
     
 想法：
 
