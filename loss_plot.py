@@ -5,8 +5,9 @@ import sys
 import torch
 
 # --- 設定輸入檔案名稱 ---
-label = 'ag1'
+label = 'DBLoss'
 CKPT_FILE_NAME = f'CKPT/svs_{label}.pth'
+CKPT_FILE_NAME = f'CKPT/loss_{label}.pth'
 checkpoint = torch.load(CKPT_FILE_NAME)
 train_loss_history = checkpoint.get('train_loss_history')
 valid_loss_history = checkpoint.get('valid_loss_history')

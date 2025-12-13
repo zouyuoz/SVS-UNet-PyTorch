@@ -8,6 +8,64 @@ import torch
     @Revise: SunnerLi
 """
 
+class SqrtL1Loss(nn.Module):
+    def __init__(self, eps=1e-7, reduction='mean'):
+        super(SqrtL1Loss, self).__init__()
+        self.eps = eps
+        self.reduction = reduction
+
+    def forward(self, pred, target):
+        
+        l1 = torch.abs(pred - target)
+        loss = torch.sqrt(l1 + self.eps)
+        
+        if self.reduction == 'mean':
+            return loss.mean()
+        elif self.reduction == 'sum':
+            return loss.sum()
+        return loss
+
+class LogL1Loss(nn.Module):
+    def __init__(self, alpha=2.0, reduction='mean'):
+        super(LogL1Loss, self).__init__()
+        self.alpha = alpha
+        self.reduction = reduction
+
+    def forward(self, pred, target):
+        
+        l1 = torch.abs(pred - target)
+        loss = torch.log1p(self.alpha * l1)
+        
+        if self.reduction == 'mean':
+            return loss.mean()
+        elif self.reduction == 'sum':
+            return loss.sum()
+        return loss
+
+class DBLoss(nn.Module):
+    def __init__(self, eps=1e-8, reduction='mean'):
+        super(DBLoss, self).__init__()
+        self.eps = eps
+        self.reduction = reduction
+
+    def forward(self, pred, target):
+        # 1. 加上 eps 避免 log(0)
+        pred_safe = torch.clamp(pred, min=self.eps)
+        target_safe = torch.clamp(target, min=self.eps)
+
+        # 2. 轉換成對數
+        pred_db = torch.log(pred_safe)
+        target_db = torch.log(target_safe)
+
+        # 3. 計算 L1 Loss in dB domain 乘上
+        loss = torch.abs(pred_db - target_db)
+
+        if self.reduction == 'mean':
+            return loss.mean()
+        elif self.reduction == 'sum':
+            return loss.sum()
+        return loss
+
 class UNet(nn.Module):
     def __init__(self):
         super(UNet, self).__init__()
@@ -79,7 +137,7 @@ class UNet(nn.Module):
 
         
         self.optim = torch.optim.Adam(self.parameters(), lr=1e-4)
-        self.crit = nn.L1Loss()
+        self.crit = DBLoss()
 
     # ==============================================================================
     #   Set & Get

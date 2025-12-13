@@ -77,9 +77,9 @@ class AttentionGate(nn.Module):
         
         return x * psi
 
-class UNet(nn.Module):
+class UNet_AG(nn.Module):
     def __init__(self):
-        super(UNet, self).__init__()
+        super(UNet_AG, self).__init__()
 
         # Define the network components
         self.conv1 = nn.Sequential(
@@ -141,16 +141,14 @@ class UNet(nn.Module):
         self.deconv4 = nn.ConvTranspose2d(128, 32, kernel_size=(5, 5), stride=(2, 2), padding=2)
         self.deconv4_BAD = nn.Sequential(
             nn.BatchNorm2d(32),
-            nn.ReLU(True),
-            nn.Dropout2d(0.5)
+            nn.ReLU(True)
         )
         self.att4 = AttentionGate(F_g=32, F_l=32, F_int=16)
         
         self.deconv5 = nn.ConvTranspose2d(64, 16, kernel_size=(5, 5), stride=(2, 2), padding=2)
         self.deconv5_BAD = nn.Sequential(
             nn.BatchNorm2d(16),
-            nn.ReLU(True),
-            nn.Dropout2d(0.5)
+            nn.ReLU(True)
         )
         self.att5 = AttentionGate(F_g=16, F_l=16, F_int=8)
         

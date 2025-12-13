@@ -1,6 +1,4 @@
-# from model import UNet
-from model_AG import UNet
-# from model_old import UNet
+from model_old import UNet
 import torch.utils.data as Data
 import numpy as np
 import argparse
@@ -43,8 +41,8 @@ parser.add_argument('--load_path'   , type = str, default = 'NaN')
 
 args = parser.parse_args()
 
-best_weight = f'CKPT/svs_{args.label}_best.pth'
-ckpt_weight = f'CKPT/svs_{args.label}.pth'
+best_weight = f'CKPT/loss_{args.label}_best.pth'
+ckpt_weight = f'CKPT/loss_{args.label}.pth'
 
 # =========================================================================================
 # 2. Training Setup
@@ -53,7 +51,7 @@ WAV_ROOT = '.MUSDB18/'
 
 # 替換 Train Loader
 train_loader = Data.DataLoader(
-    dataset = SpectrogramDataset(path=args.train_folder, samples_per_song=SAMPLES_PER_SONG, augment=True),
+    dataset = SpectrogramDataset(path=args.train_folder, samples_per_song=SAMPLES_PER_SONG, augment=False),
     batch_size=args.batch_size, num_workers=8, shuffle=True, pin_memory=True
 )
 
@@ -69,7 +67,7 @@ model.to(device)
 best_val_loss = 100.
 train_loss_history = []
 valid_loss_history = []
-# scheduler = None
+scheduler = None
 start_epoch = 0
 
 # [新增] 定義 LR Scheduler (ReduceLROnPlateau)
@@ -109,7 +107,7 @@ if os.path.exists(args.load_path):
             best_val_loss = min(valid_loss_history)
             print(f"Restored best_val_loss: {best_val_loss:.6f}")
 else:
-    print(f'Path not found: {args.load_path}  Will not load checkpoint on this training')
+    print(f'found no {args.load_path}')
 
 # =========================================================================================
 # 3. Main Loop
@@ -171,23 +169,20 @@ for ep in range(start_epoch, args.epoch):
         is_best_val_loss = ''
         if avg_val_loss < best_val_loss:
             best_val_loss = avg_val_loss
-            is_best_val_loss = '*'
+            is_best_val_loss = ' *'
             torch.save(checkpoint, best_weight)
             
-        print(f"\n[Epoch {ep+1}] Train Loss: {avg_train_loss:.6f} | Val Loss: {avg_val_loss:.6f} " + is_best_val_loss)
+        print(f"[Epoch {ep+1}] Train Loss: {avg_train_loss:.6f} | Val Loss: {avg_val_loss:.6f}{is_best_val_loss}\n")
         
     else: print(f"Epoch {ep+1} Avg Loss: {avg_train_loss:.6f}")
 
 print("Finish training!")
 
 """
-python train.py \
-    --train_folder unet_spectrograms/train \
-    --valid_folder unet_spectrograms/valid \
-    --label agAug \
-    --batch_size 32 \
+python train_losses.py \
+    --label DBLoss \
     --epoch 500 \
-    --val_interval 10
+    --batch_size 32 --val_interval 10
     
 想法：
 

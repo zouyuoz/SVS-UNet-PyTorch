@@ -12,6 +12,7 @@ test_results/
 
 *.png
 *.jpg
+*.csv
 
 LOG/
 zz/
