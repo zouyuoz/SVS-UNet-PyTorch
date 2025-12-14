@@ -176,108 +176,117 @@ warnings.filterwarnings("ignore")
 import torch.nn.functional as F
 
 class SpectrogramDataset(Data.Dataset):
-    def __init__(self, path, samples_per_song=SAMPLES_PER_SONG, augment=False):
-        """
-        augment: bool, 是否啟用資料增強 (Pitch Shift & Time Stretch)
-        """
+    def __init__(self, path, samples_per_song=64, augment=False, nmixx=False):
         self.path = path
         self.mixture_path = os.path.join(path, 'mixture')
         self.vocal_path = os.path.join(path, 'vocal')
         self.samples_per_song = samples_per_song
-        self.augment = augment # [新增] Augmentation 開關
+        self.augment = augment
+        self.nmixx = nmixx 
 
         if not os.path.exists(self.mixture_path):
             raise FileNotFoundError(f"找不到 Mixture 資料夾: {self.mixture_path}")
 
-        # 讀取所有檔名
         self.file_names = sorted([f for f in os.listdir(self.mixture_path) if f.endswith('_spec.npy')])
-        
-        # 確保對應檔案存在
         self.file_names = [f for f in self.file_names if os.path.exists(os.path.join(self.vocal_path, f))]
         
         mode_str = "Train (w/ Aug)" if augment else "Valid"
         print(f"[{os.path.basename(path)}] [{mode_str}] 載入 {len(self.file_names)} 首歌曲，每輪採樣 {self.samples_per_song} 次。")
 
     def __len__(self):
-        # 讓 Dataset 的長度變長 (歌曲數 * 每首歌採樣次數)
         return len(self.file_names) * self.samples_per_song
 
-    def __getitem__(self, idx):
-        # 透過取餘數來決定現在要讀哪首歌
-        file_name = self.file_names[idx % len(self.file_names)]
-        
-        # 1. 讀取 .npy (Shape: 513, T)
-        mix = np.load(os.path.join(self.mixture_path, file_name))
-        voc = np.load(os.path.join(self.vocal_path, file_name))
+    def _random_crop(self, mat, crop_width):
+        """ 輔助函式：對單一頻譜圖進行隨機裁切或 Padding """
+        curr_len = mat.shape[1]
+        if curr_len > crop_width:
+            start = random.randint(0, curr_len - crop_width)
+            return mat[:, start:start + crop_width]
+        else:
+            pad_width = crop_width - curr_len
+            return np.pad(mat, ((0, 0), (0, pad_width)), mode='constant')
 
-        # 2. 裁切頻率 DC (513 -> 512)，在 Augmentation 前先切成 512，方便計算
-        mix = mix[1:, :]
-        voc = voc[1:, :]
+    def __getitem__(self, idx):
+        # 1. 取得檔案索引
+        idx_a = idx % len(self.file_names)
+        file_name_a = self.file_names[idx_a]
         
+        # 2. 決定 Augmentation 參數 (先決定要切多長)
         scale_f = 1.0
         scale_t = 1.0
-        # --- Data Augmentation --- 論文設定: +/- 30% (scale factor 0.7 ~ 1.3)
         if self.augment:
-            scale_f = random.uniform(0.7, 1.3) # 頻率軸縮放 (Pitch Shift)
-            scale_t = random.uniform(0.7, 1.3) # 時間軸縮放 (Time Stretch)
+            scale_f = random.uniform(0.7, 1.3)
+            scale_t = random.uniform(0.7, 1.3)
             
-        # --- 3. 處理時間軸 (Time Stretch + Random Crop) ---
-        target_width = INPUT_LEN # 128
-        
-        # 根據縮放比例計算「需要從原始資料切多長」
-        # 例如: 若 scale_t = 0.5 (變慢/拉長)，我們只需要切 64 (128*0.5) 原圖，拉長後就是 128
-        crop_width = int(target_width * scale_t)
-        
-        curr_len = mix.shape[1]
-        if curr_len > crop_width:
-            # 隨機選一個起點
-            start = random.randint(0, curr_len - crop_width)
-            mix_crop = mix[:, start:start + crop_width]
-            voc_crop = voc[:, start:start + crop_width]
+        target_width = INPUT_LEN
+        crop_width = int(target_width * scale_t) # 根據 Time Stretch 比例決定裁切長度
+
+        # 3. 讀取與處理
+        # 讀取 Song A (作為 Base 或 Accompaniment 來源)
+        mix_a = np.load(os.path.join(self.mixture_path, file_name_a))[1:, :] # (512, T)
+        voc_a = np.load(os.path.join(self.vocal_path, file_name_a))[1:, :] # (512, T)
+
+        # === 核心修改邏輯 ===
+        if self.nmixx and random.random() < 0.5: # 50% 機率觸發 Remix (建議不要 100%，保留原始數據)
+            # 隨機選 Song B (提供 Vocal)
+            idx_b = (idx_a + random.randint(1, len(self.file_names) - 1)) % len(self.file_names)
+            file_name_b = self.file_names[idx_b]
+            voc_b = np.load(os.path.join(self.vocal_path, file_name_b))[1:, :] # (512, T_b)
+
+            # A. 計算 Song A 的伴奏 (Approximation: Mix - Voc)
+            # 使用 ReLU (maximum 0) 避免頻譜相減出現負值
+            acc_a = np.maximum(0, mix_a - voc_a)
+
+            # B. 獨立裁切 (解決維度不匹配問題)
+            # Song A (Acc) 和 Song B (Voc) 長度不同，必須分開切
+            acc_crop = self._random_crop(acc_a, crop_width)
+            voc_crop = self._random_crop(voc_b, crop_width)
+
+            # C. 合成新數據 (New Mix = Acc A + Voc B)
+            mix_crop = acc_crop + voc_crop
+            target_crop = voc_crop # 目標是 Song B 的人聲
+
         else:
-            # Padding
-            pad_width = crop_width - curr_len
-            mix_crop = np.pad(mix, ((0, 0), (0, pad_width)), mode='constant')
-            voc_crop = np.pad(voc, ((0, 0), (0, pad_width)), mode='constant')
+            # === 一般情況 (同一首歌) ===
+            # 必須使用「相同」的起點裁切，所以不能用分開的 _random_crop
+            curr_len = mix_a.shape[1]
+            if curr_len > crop_width:
+                start = random.randint(0, curr_len - crop_width)
+                mix_crop = mix_a[:, start:start + crop_width]
+                target_crop = voc_a[:, start:start + crop_width]
+            else:
+                pad_width = crop_width - curr_len
+                mix_crop = np.pad(mix_a, ((0, 0), (0, pad_width)), mode='constant')
+                target_crop = np.pad(voc_a, ((0, 0), (0, pad_width)), mode='constant')
 
         # --- 4. 執行縮放 (Interpolation) ---
-        # 只有當比例不為 1.0 時才需要做插值運算，節省資源
         if self.augment and (scale_f != 1.0 or scale_t != 1.0):
-            # 準備 Tensor (Interpolate 需要 Batch & Channel 維度: B, C, H, W)
-            # 目前 shape: (512, crop_width) -> (1, 1, 512, crop_width)
+            # 轉 Tensor 並增加維度 (B, C, H, W)
             mix_tensor = torch.from_numpy(mix_crop).unsqueeze(0).unsqueeze(0)
-            voc_tensor = torch.from_numpy(voc_crop).unsqueeze(0).unsqueeze(0)
+            voc_tensor = torch.from_numpy(target_crop).unsqueeze(0).unsqueeze(0)
             
-            # 計算目標高度 (Freq)
             target_height_raw = int(512 * scale_f)
             
-            # 執行雙線性插值 (Bilinear Interpolation)，同時完成了 Time Stretch (resize 到 128) 和 Pitch Shift (resize Freq)
+            # 雙線性插值
             mix_resized = F.interpolate(mix_tensor, size=(target_height_raw, target_width), mode='bilinear', align_corners=False)
             voc_resized = F.interpolate(voc_tensor, size=(target_height_raw, target_width), mode='bilinear', align_corners=False)
             
-            # --- 5. 修復頻率維度 (Fix Frequency Dimension to 512) ---
-            if target_height_raw > 512: # 如果拉長了 (Pitch Up)，切掉多餘的高頻部分，保留低頻 (index 0~512)
+            # 修復頻率維度
+            if target_height_raw > 512:
                 mix_final = mix_resized[:, :, :512, :]
                 voc_final = voc_resized[:, :, :512, :]
-            elif target_height_raw < 512: # 如果壓扁了 (Pitch Down)，高頻補零
+            elif target_height_raw < 512:
                 pad_h = 512 - target_height_raw
-                mix_final = F.pad(mix_resized, (0, 0, 0, pad_h), mode='constant', value=0) # pad 順序: (left, right, top, bottom)
-                voc_final = F.pad(voc_resized, (0, 0, 0, pad_h), mode='constant', value=0) # 我們要在 H 的尾端 (高頻) 補零，也就是 bottom
+                mix_final = F.pad(mix_resized, (0, 0, 0, pad_h), mode='constant', value=0)
+                voc_final = F.pad(voc_resized, (0, 0, 0, pad_h), mode='constant', value=0)
             else:
                 mix_final = mix_resized
                 voc_final = voc_resized
             
-            # 維度 -> (1, 512, 128)
             mix = mix_final.squeeze(0)
             voc = voc_final.squeeze(0)
-            
-            # 確保型態
-            mix = mix.float()
-            voc = voc.float()
-
         else:
-            # 如果沒有 Augmentation，直接轉 Tensor 並增加 Channel 維度
             mix = torch.from_numpy(mix_crop[np.newaxis, :, :].astype(np.float32))
-            voc = torch.from_numpy(voc_crop[np.newaxis, :, :].astype(np.float32))
+            voc = torch.from_numpy(target_crop[np.newaxis, :, :].astype(np.float32))
 
-        return mix, voc
+        return mix.float(), voc.float()

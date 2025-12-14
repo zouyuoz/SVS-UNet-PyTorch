@@ -1,21 +1,15 @@
-unet_spectrograms/
-unet_spectrograms_high/
+*.wav
+*.npy
+
+.MUSDB18/
 .venv/
 __pycache__/
 .python-version
 
-CKPT/
-
-custom_song/
-custom_result/
-test_results/
+*.pth
 
 *.png
 *.jpg
 *.csv
 
-LOG/
 zz/
-PRED_SPEC/
-
-.MUSDB18/

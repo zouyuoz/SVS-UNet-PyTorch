@@ -210,7 +210,7 @@ python evaluate.py \
     --est test_results/wav \
     --ref test_results/gt_vocal_wav_low \
     --mix test_results/gt_mixture_wav_low \
-    --out_csv EVALUATE/DBLoss.csv
+    --out_csv EVALUATE/AG_aug_ft_best.csv
 ---
 
 vanilla:	 SDR=3.165 dB,   SIR=11.335 dB,  SAR=4.447 dB,   NSDR=9.612 dB
@@ -224,5 +224,11 @@ LogL1:		 SDR=2.811 dB,   SIR=10.463 dB,  SAR=4.362 dB,   NSDR=9.259 dB
 DBLoss		 SDR=1.357 dB,   SIR=9.371 dB,   SAR=2.964 dB,   NSDR=7.805 dB
 ---
 attngc_best: SDR=1.917 dB,   SIR=13.905 dB,  SAR=2.768 dB,   NSDR=8.365 dB
+correct:
+VNL          SDR=3.067 dB,   SIR=10.966 dB,  SAR=4.459 dB,   NSDR=9.514 dB
+VNL_aug_best SDR=3.684 dB,   SIR=11.687 dB,  SAR=5.015 dB,   NSDR=10.131 dB
+AG_best      SDR=3.344 dB,   SIR=11.643 dB,  SAR=4.553 dB,   NSDR=9.791 dB
+AG_aug_best  SDR=4.026 dB,   SIR=12.196 dB,  SAR=5.226 dB,   NSDR=10.474 dB
+---
 
 """

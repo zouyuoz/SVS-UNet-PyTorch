@@ -1,5 +1,7 @@
 # from model_AG import UNet
-from model_old import UNet
+# from model_old import UNet
+# from correct_model_old import UNet
+from correct_model_AG import UNet_AG
 import numpy as np
 import argparse
 import torch
@@ -41,11 +43,13 @@ if not os.path.exists(args.tar):
 device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
 print(f"Inference using device: {device}")
 
-model = UNet()
+# model = UNet()
+model = UNet_AG()
 model.to(device)
 try:
     checkpoint = torch.load(args.model_path, map_location=device)
     model.load_state_dict(checkpoint['model_state_dict'])
+    print(f"成功載入模型權重：{args.model_path}")
 except Exception as e:
     print(f"載入模型失敗: {e}")
     exit(1)
@@ -138,16 +142,16 @@ python data.py \
     --direction to_spec
 
 python inference.py \
-    --model_path CKPT/svs_ag_aug_best.pth \
+    --model_path cKPT/svs_AG_aug_best.pth \
     --mixture_folder custom_result/spec/mixture \
     --tar custom_result/spec/pred_spec \
-    --vocal_solo 0
+    --vocal_solo 1
 
 python data.py \
     --direction to_wave \
     --src custom_result/spec/pred_spec \
     --phase custom_result/spec/mixture \
-    --tar custom_result/wav
+    --tar custom_result/wav_vocal
 
 +----------------------+
 |         HIGH         |
@@ -170,7 +174,7 @@ python data.py \
 +----------------------+
 
 python inference.py \
-    --model_path CKPT/loss_DBLoss.pth \
+    --model_path cKPT/svs_AG_aug_ft_best.pth \
     --mixture_folder unet_spectrograms/test/mixture \
     --tar test_results/spec \
     --vocal_solo 1

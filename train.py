@@ -1,6 +1,9 @@
 # from model import UNet
-from model_AG import UNet
+# from model_AG import UNet
 # from model_old import UNet
+from correct_model_AG import UNet_AG
+from correct_model_old import UNet
+
 import torch.utils.data as Data
 import numpy as np
 import argparse
@@ -36,24 +39,28 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--train_folder', type = str, default = 'unet_spectrograms/train')
 parser.add_argument('--valid_folder', type = str, default = 'unet_spectrograms/valid')
 parser.add_argument('--label'       , type = str, required = True)
-parser.add_argument('--batch_size'  , type = int, default = 8)
-parser.add_argument('--epoch'       , type = int, default = 10)
-parser.add_argument('--val_interval', type = int, default = 20)
+parser.add_argument('--using_old'   , type = int, required = True)
+parser.add_argument('--using_aug'   , type = int, required = True)
+parser.add_argument('--using_mix'   , type = int, required = True)
+parser.add_argument('--batch_size'  , type = int, default = 32)
+parser.add_argument('--epoch'       , type = int, default = 500)
+parser.add_argument('--val_interval', type = int, default = 10)
 parser.add_argument('--load_path'   , type = str, default = 'NaN')
 
 args = parser.parse_args()
 
-best_weight = f'CKPT/svs_{args.label}_best.pth'
-ckpt_weight = f'CKPT/svs_{args.label}.pth'
+best_weight = f'cKPT/svs_{args.label}_best.pth'
+ckpt_weight = f'cKPT/svs_{args.label}.pth'
 
 # =========================================================================================
 # 2. Training Setup
 # =========================================================================================
 WAV_ROOT = '.MUSDB18/' 
-
+using_aug = args.using_aug != 0
+using_mix = args.using_mix != 0
 # 替換 Train Loader
 train_loader = Data.DataLoader(
-    dataset = SpectrogramDataset(path=args.train_folder, samples_per_song=SAMPLES_PER_SONG, augment=True),
+    dataset = SpectrogramDataset(path=args.train_folder, samples_per_song=SAMPLES_PER_SONG, augment=using_aug, nmixx=using_mix),
     batch_size=args.batch_size, num_workers=8, shuffle=True, pin_memory=True
 )
 
@@ -63,7 +70,7 @@ valid_loader = Data.DataLoader(
     batch_size=args.batch_size, num_workers=4, shuffle=False, pin_memory=True
 )
 
-model = UNet()
+model = UNet() if args.using_old else UNet_AG()
 model.to(device)
 
 best_val_loss = 100.
@@ -174,20 +181,19 @@ for ep in range(start_epoch, args.epoch):
             is_best_val_loss = '*'
             torch.save(checkpoint, best_weight)
             
-        print(f"\n[Epoch {ep+1}] Train Loss: {avg_train_loss:.6f} | Val Loss: {avg_val_loss:.6f} " + is_best_val_loss)
+        print(f"[Epoch {ep+1}] Train Loss: {avg_train_loss:.6f} | Val Loss: {avg_val_loss:.6f} {is_best_val_loss}\n")
         
     else: print(f"Epoch {ep+1} Avg Loss: {avg_train_loss:.6f}")
 
 print("Finish training!")
 
 """
-python train.py \
-    --train_folder unet_spectrograms/train \
-    --valid_folder unet_spectrograms/valid \
-    --label agAug \
-    --batch_size 32 \
-    --epoch 500 \
-    --val_interval 10
+python train.py --using_old 1 --using_aug 0 --label VNL
+python train.py --using_old 1 --using_aug 1 --label VNL_aug
+python train.py --using_old 0 --using_aug 0 --label AG
+
+python train.py --using_old 0 --using_aug 1 --using_mix 1 --load_path cKPT/svs_AG_aug.pth --epoch 2000 --label AG_aug_mix_ft
+python train.py --using_old 0 --using_aug 1 --using_mix 0 --load_path cKPT/svs_AG_aug.pth --epoch 2000 --label AG_aug_ft
     
 想法：
 
