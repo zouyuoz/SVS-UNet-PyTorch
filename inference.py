@@ -138,36 +138,36 @@ print("分離完成！")
 +----------------------+
 python data.py \
     --src custom_song \
-    --tar custom_result/spec \
+    --tar custom_result/spec_high \
     --direction to_spec
 
 python inference.py \
-    --model_path cKPT/svs_AG_aug_best.pth \
-    --mixture_folder custom_result/spec/mixture \
-    --tar custom_result/spec/pred_spec \
-    --vocal_solo 1
+    --model_path cKPT/svs_HR2000_best.pth \
+    --mixture_folder custom_result/spec_high/mixture \
+    --tar custom_result/spec_high/pred_spec \
+    --vocal_solo 0
 
 python data.py \
     --direction to_wave \
-    --src custom_result/spec/pred_spec \
-    --phase custom_result/spec/mixture \
-    --tar custom_result/wav_vocal
+    --src custom_result/spec_high/pred_spec \
+    --phase custom_result/spec_high/mixture \
+    --tar custom_result/wav_accomp
 
 +----------------------+
 |         HIGH         |
 +----------------------+
 
 python inference.py \
-    --model_path CKPT/svs_400.pth \
-    --mixture_folder unet_spectrograms_high/test/mixture \
-    --tar test_results/spec \
+    --model_path cKPT/svs_HR2000.pth \
+    --mixture_folder ultraRes/test/mixture \
+    --tar tesu_results/spec \
     --vocal_solo 1
 
 python data.py \
     --direction to_wave \
-    --src test_results/spec \
-    --phase unet_spectrograms_high/test/mixture  \
-    --tar test_results/wav
+    --src tesu_results/spec \
+    --phase ultraRes/test/mixture  \
+    --tar tesu_results/wav
 
 +----------------------+
 |         LOW          |
@@ -177,13 +177,13 @@ python inference.py \
     --model_path cKPT/svs_AG_aug_ft_best.pth \
     --mixture_folder unet_spectrograms/test/mixture \
     --tar test_results/spec \
-    --vocal_solo 1
+    --vocal_solo 0
 
 python data.py \
     --direction to_wave \
     --src test_results/spec \
     --phase unet_spectrograms/test/mixture  \
-    --tar test_results/wav
+    --tar test_results/wav_accomp
 
 ---
 

@@ -59,7 +59,7 @@ def debug_inference(model_path, spec_path):
 
     # 3. 滑動視窗推論 (Sliding Window Inference)
     # [修正] 明確定義 segment length，避免依賴外部常數造成混淆
-    seg_len = 128 
+    seg_len = INPUT_LEN 
     length = mix_input.shape[1]
     
     predicted_specs = []
@@ -124,9 +124,19 @@ def debug_inference(model_path, spec_path):
 
     # 計算 dB 差異
     diff_db = pred_vocal_db - gt_vocal_db
-    # 計算各個頻率分箱的絕對誤差累積 (Mean Absolute Error per Frequency Bin)
-    # axis=1 代表沿著時間軸取平均，結果 shape 為 (512,)
-    freq_error_accum = np.mean(np.abs(diff_db), axis=1)
+
+    # --- 修改重點開始 ---
+    
+    # 1. 分離正負誤差
+    # np.maximum(0, diff_db): 只保留正值 (預測 > 真實)，其餘為 0
+    # np.minimum(0, diff_db): 只保留負值 (預測 < 真實)，其餘為 0
+    pos_diff = np.maximum(0, diff_db) 
+    neg_diff = np.minimum(0, diff_db) 
+
+    # 2. 計算各個頻率分箱的平均誤差 (分別計算正負)
+    # axis=1 代表沿著時間軸取平均
+    pos_error_accum = np.mean(pos_diff, axis=1) # 結果為正數
+    neg_error_accum = np.mean(neg_diff, axis=1) # 結果為負數
 
     # 6. 畫圖
     fig = plt.figure(figsize=(15, 6))
@@ -172,13 +182,31 @@ def debug_inference(model_path, spec_path):
     
     # --- 6. Frequency Error Bar Chart ---
     ax6 = fig.add_subplot(gs[1, 1])
-    ax6.set_title("6. Avg Absolute Error per Freq Bin (dB)")
+    ax6.set_title("6. Avg Error per Freq Bin (dB) [Red:+, Blue:-]")
     
-    # 繪製長條圖 (轉置方向以配合頻譜圖的縱軸)
-    # barh: 水平長條圖，y軸是頻率 index (0~511)，x軸是誤差值
-    freq_bins = np.arange(len(freq_error_accum))
-    ax6.barh(freq_bins, freq_error_accum, color='salmon', edgecolor='none')
-    ax6.text(10, 100, f"Avg: {freq_error_accum.mean():.3f}", color='red', fontweight='bold')
+    freq_bins = np.arange(len(pos_error_accum))
+    
+    # 3. 繪製雙向長條圖
+    # 繪製正誤差 (紅色，向右)
+    ax6.barh(freq_bins, pos_error_accum, color='salmon', edgecolor='none', label='Pred > GT')
+    # 繪製負誤差 (藍色，向左)
+    ax6.barh(freq_bins, neg_error_accum, color='skyblue', edgecolor='none', label='Pred < GT')
+    
+    # 加入 0 的基準線，方便辨識
+    ax6.axvline(0, color='black', linewidth=0.8, linestyle='--')
+
+    # 顯示總體平均絕對誤差 (MAE) 作為參考
+    # MAE = 平均正誤差 + abs(平均負誤差)
+    total_mae = np.mean(np.abs(diff_db))
+    ax6.text(0.05, 0.95, f"{total_mae:.3f} dB", 
+             transform=ax6.transAxes, color='black', fontweight='bold', ha='left', va='top')
+
+    # (選用) 如果你想固定 X 軸範圍讓正負對稱，可以取消下面這行的註解
+    # max_val = max(pos_error_accum.max(), abs(neg_error_accum.min()))
+    # ax6.set_xlim(-max_val, max_val)
+
+    # 加上圖例
+    ax6.legend(loc='upper right', fontsize='small')
     
     tick_locations = np.arange(0, X_MAX, 60*SAMPLE_RATE/HOP_SIZE)
     tick_labels = (tick_locations / (60*SAMPLE_RATE/HOP_SIZE)).astype(int) 
@@ -199,7 +227,7 @@ def debug_inference(model_path, spec_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_path', type=str, default='cKPT/svs_AG_aug_ft.pth')
+    parser.add_argument('--model_path', type=str, default='cKPT/svs_AG_aug_ft_best.pth')
     parser.add_argument('--spec_path' , type=str, required=True, help="Path to the MIXTURE spectrogram")
     args = parser.parse_args()
     
@@ -209,4 +237,7 @@ if __name__ == "__main__":
 python aaa.py --spec_path "unet_spectrograms/test/mixture/0007_Bobby Nobody - Stitch Up_spec.npy"
 python aaa.py --spec_path "unet_spectrograms/test/mixture/0005_BKS - Too Much_spec.npy"
 python aaa.py --spec_path "unet_spectrograms/test/mixture/0005_BKS - Too Much_spec.npy"
+
+python aaa.py --spec_path "ultraRes/test/mixture/0007_Bobby Nobody - Stitch Up_spec.npy"
+
 """
