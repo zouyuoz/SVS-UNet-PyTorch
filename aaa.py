@@ -7,7 +7,7 @@ import librosa
 # from model_AG import UNet
 # from model import UNet
 # from model_old import UNet
-# from correct_model_old import UNet
+from correct_model_old import UNet
 from correct_model_AG import UNet_AG
 from utils import *
 import warnings
@@ -227,7 +227,7 @@ def debug_inference(model_path, spec_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_path', type=str, default='cKPT/svs_AG_aug_ft_best.pth')
+    parser.add_argument('--model_path', type=str, default='cKPT/_MAAG_best.pth')
     parser.add_argument('--spec_path' , type=str, required=True, help="Path to the MIXTURE spectrogram")
     args = parser.parse_args()
     
@@ -235,7 +235,6 @@ if __name__ == "__main__":
 
 """
 python aaa.py --spec_path "unet_spectrograms/test/mixture/0007_Bobby Nobody - Stitch Up_spec.npy"
-python aaa.py --spec_path "unet_spectrograms/test/mixture/0005_BKS - Too Much_spec.npy"
 python aaa.py --spec_path "unet_spectrograms/test/mixture/0005_BKS - Too Much_spec.npy"
 
 python aaa.py --spec_path "ultraRes/test/mixture/0007_Bobby Nobody - Stitch Up_spec.npy"

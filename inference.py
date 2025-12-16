@@ -1,6 +1,6 @@
 # from model_AG import UNet
 # from model_old import UNet
-# from correct_model_old import UNet
+from correct_model_old import UNet
 from correct_model_AG import UNet_AG
 import numpy as np
 import argparse
@@ -136,23 +136,23 @@ print("分離完成！")
 +----------------------+
 |        CUSTOM        |
 +----------------------+
-python data.py \
-    --src custom_song \
-    --tar custom_result/spec_high \
-    --direction to_spec
+python data.py --src custom_song --tar custom_result/spec --direction to_spec
 
 python inference.py \
-    --model_path cKPT/svs_HR2000_best.pth \
-    --mixture_folder custom_result/spec_high/mixture \
-    --tar custom_result/spec_high/pred_spec \
-    --vocal_solo 0
+    --mixture_folder custom_result/spec/mixture --tar custom_result/spec/pred_spec \
+    --model_path cKPT/_MAAG_best.pth --vocal_solo 0
 
-python data.py \
-    --direction to_wave \
-    --src custom_result/spec_high/pred_spec \
-    --phase custom_result/spec_high/mixture \
+python data.py --direction to_wave --src custom_result/spec/pred_spec --phase custom_result/spec/mixture \
     --tar custom_result/wav_accomp
 
+python inference.py \
+    --mixture_folder custom_result/spec/mixture --tar custom_result/spec/pred_spec \
+    --model_path cKPT/_MAAG_best.pth --vocal_solo 1
+
+python data.py --direction to_wave --src custom_result/spec/pred_spec --phase custom_result/spec/mixture \
+    --tar custom_result/wav_vocal
+
+mixture
 +----------------------+
 |         HIGH         |
 +----------------------+
@@ -174,16 +174,16 @@ python data.py \
 +----------------------+
 
 python inference.py \
-    --model_path cKPT/svs_AG_aug_ft_best.pth \
+    --model_path cKPT/_MAAG_best.pth \
     --mixture_folder unet_spectrograms/test/mixture \
     --tar test_results/spec \
-    --vocal_solo 0
+    --vocal_solo 1
 
 python data.py \
     --direction to_wave \
     --src test_results/spec \
     --phase unet_spectrograms/test/mixture  \
-    --tar test_results/wav_accomp
+    --tar test_results/wav
 
 ---
 

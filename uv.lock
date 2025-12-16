@@ -1692,6 +1692,16 @@ wheels = [
 ]
 
 [[package]]
+name = "sox"
+version = "1.5.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/3d/a2/d8e0d8fd7abf509ead4a2cb0fb24e5758b5330166bf9223d5cb9f98a7e8d/sox-1.5.0.tar.gz", hash = "sha256:12c7be5bb1f548d891fe11e82c08cf5f1a1d74e225298f60082e5aeb2469ada0", size = 63905, upload-time = "2024-03-20T16:59:37.385Z" }
+
+[[package]]
 name = "soxr"
 version = "1.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1783,6 +1793,7 @@ dependencies = [
     { name = "pandas" },
     { name = "setuptools" },
     { name = "soundfile" },
+    { name = "sox" },
     { name = "stempeg" },
     { name = "torch" },
     { name = "torchaudio" },
@@ -1801,6 +1812,7 @@ requires-dist = [
     { name = "pandas", specifier = ">=2.3.3" },
     { name = "setuptools", specifier = ">=80.9.0" },
     { name = "soundfile", specifier = "==0.12.1" },
+    { name = "sox", specifier = ">=1.5.0" },
     { name = "stempeg", specifier = "==0.2.3" },
     { name = "torch", specifier = ">=2.0.0" },
     { name = "torchaudio", specifier = ">=2.0.0" },

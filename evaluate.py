@@ -210,7 +210,7 @@ python evaluate.py \
     --est test_results/wav \
     --ref test_results/gt_vocal_wav_low \
     --mix test_results/gt_mixture_wav_low \
-    --out_csv EVALUATE/AG_aug_ft_best.csv
+    --out_csv EVALUATE/_MAAGbest.csv
 ---
 
 vanilla:	 SDR=3.165 dB,   SIR=11.335 dB,  SAR=4.447 dB,   NSDR=9.612 dB
@@ -230,5 +230,5 @@ VNL_aug_best SDR=3.684 dB,   SIR=11.687 dB,  SAR=5.015 dB,   NSDR=10.131 dB
 AG_best      SDR=3.344 dB,   SIR=11.643 dB,  SAR=4.553 dB,   NSDR=9.791 dB
 AG_aug_best  SDR=4.026 dB,   SIR=12.196 dB,  SAR=5.226 dB,   NSDR=10.474 dB
 ---
-
+_MAAG		 SDR=4.167 dB,   SIR=12.626 dB,  SAR=5.369 dB,   NSDR=10.614 dB
 """

@@ -5,9 +5,9 @@ import sys
 import torch
 
 # --- 設定輸入檔案名稱 ---
-label = 'M'
+label = 'MAAG'
 # CKPT_FILE_NAME = f'cKPT/loss_{label}.pth'
-CKPT_FILE_NAME = f'CKPT/ML_{label}.pth'
+CKPT_FILE_NAME = f'cKPT/_{label}.pth'
 checkpoint = torch.load(CKPT_FILE_NAME)
 train_loss_history = checkpoint.get('train_loss_history')
 valid_loss_history = checkpoint.get('valid_loss_history')

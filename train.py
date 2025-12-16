@@ -49,8 +49,8 @@ parser.add_argument('--load_path'   , type = str, default = 'NaN')
 
 args = parser.parse_args()
 
-best_weight = f'CKPT/ML_{args.label}_best.pth'
-ckpt_weight = f'CKPT/ML_{args.label}.pth'
+best_weight = f'cKPT/_{args.label}_best.pth'
+ckpt_weight = f'cKPT/_{args.label}.pth'
 
 # =========================================================================================
 # 2. Training Setup
@@ -193,6 +193,7 @@ python train.py --using_old 1 --using_aug 1 --using_mix 0 --label A
 python train.py --using_old 1 --using_aug 0 --using_mix 1 --label M
 python train.py --using_old 1 --using_aug 1 --using_mix 1 --label MA
 
+python train.py --using_old 0 --using_aug 1 --using_mix 1 --label MAAG --epoch 2000
 
 
 """

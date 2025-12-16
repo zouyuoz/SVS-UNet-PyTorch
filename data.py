@@ -159,7 +159,7 @@ elif args.direction == 'to_wave':
             if max_val > 0:
                 y = y / max_val * 0.9 # 正規化到 0.9 (避免破音)
             
-            sf.write(os.path.join(args.tar, spec_name[5:].replace('_spec.npy', '.wav')), y, args.sr)
+            sf.write(os.path.join(args.tar, spec_name.replace('_spec.npy', '.wav')), y, args.sr)
             
         except Exception as e:
             print(f"還原失敗 {spec_name}: {e}")
